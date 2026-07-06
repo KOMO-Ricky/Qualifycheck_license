@@ -312,6 +312,7 @@ img{max-width:100%;}
 @keyframes shimmer{0%{transform:translateX(-130%);}55%,100%{transform:translateX(130%);}}
 
 </style>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -1588,6 +1589,56 @@ function syncAgreeAll(){
   if(all&&a&&m) all.checked=(a.checked&&m.checked);
   var b=document.getElementById("submitBtn"); if(b&&a) b.disabled=!a.checked;
 }
+/* ── 문자(MMS) 발송용 진단표 이미지 생성 ── */
+async function _cardToCanvasForSms(targetId){
+  let target = document.getElementById(targetId);
+  if (!target) return null;
+  if (typeof html2canvas === 'undefined') return null;
+  let isDocList = targetId === 'docListWrap';
+  let cardWidth = Math.max(target.offsetWidth + 64, 360);
+  let card = document.createElement('div');
+  card.style.cssText = 'position:fixed;left:-99999px;top:0;width:'+cardWidth+'px;background:#FBF9F4;font-family:"Noto Sans KR",sans-serif;';
+  let header = document.createElement('div');
+  header.style.cssText = 'background:linear-gradient(135deg,#1B2735,#10161F);padding:20px 24px 16px;';
+  header.innerHTML = '<div style="font-size:15px;font-weight:800;color:#C9A86A;margin-bottom:4px;">개인택시 양수도센터</div><div style="font-size:18px;font-weight:900;color:#fff;">'+(isDocList?'맞춤 필요 서류 리스트':'양수 자격 진단표')+'</div>';
+  let bodyWrap = document.createElement('div');
+  bodyWrap.style.cssText = 'padding:20px;background:#FBF9F4;';
+  let clone = target.cloneNode(true);
+  clone.style.cssText = 'background:#fff;border-radius:14px;overflow:hidden;padding:14px 18px;';
+  clone.querySelectorAll('.result-row,.seal').forEach(function(el){ el.style.animation='none'; el.style.opacity='1'; el.style.transform=''; });
+  bodyWrap.appendChild(clone);
+  let footer = document.createElement('div');
+  footer.style.cssText = 'background:#10161F;padding:14px 20px 16px;text-align:center;';
+  footer.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:6px;">본 진단 결과는 참고용입니다</div><div style="font-size:13px;color:#fff;font-weight:700;">개인택시 양수도센터</div><div style="font-size:16px;color:#C9A86A;font-weight:900;">1566-7114</div>';
+  card.appendChild(header); card.appendChild(bodyWrap); card.appendChild(footer);
+  document.body.appendChild(card);
+  try{
+    let canvas = await html2canvas(card, {backgroundColor:'#FBF9F4', scale:2, useCORS:true, logging:false});
+    return canvas;
+  } finally {
+    if (card.parentNode) document.body.removeChild(card);
+  }
+}
+function _estimateBase64Bytes(dataUrl){ let b = (dataUrl.split(',')[1] || ''); return Math.floor(b.length * 3 / 4); }
+function _canvasToJpegUnder(srcCanvas, maxBytes, maxWidth){
+  let w = srcCanvas.width, h = srcCanvas.height;
+  let scale = Math.min(1, maxWidth / w);
+  w = Math.round(w * scale); h = Math.round(h * scale);
+  let c = document.createElement('canvas'), ctx;
+  function redraw(){ c.width = w; c.height = h; ctx = c.getContext('2d'); ctx.fillStyle = '#FBF9F4'; ctx.fillRect(0,0,w,h); ctx.drawImage(srcCanvas,0,0,w,h); }
+  redraw();
+  let q = 0.85;
+  let dataUrl = c.toDataURL('image/jpeg', q);
+  while (_estimateBase64Bytes(dataUrl) > maxBytes && q > 0.4){ q -= 0.1; dataUrl = c.toDataURL('image/jpeg', q); }
+  while (_estimateBase64Bytes(dataUrl) > maxBytes && w > 480){ w = Math.round(w*0.85); h = Math.round(h*0.85); redraw(); dataUrl = c.toDataURL('image/jpeg', 0.75); }
+  return dataUrl;
+}
+async function buildDiagnosisImageForSms(){
+  // 진단표를 브랜딩 카드로 렌더 → MMS 규격(JPG · 약 190KB 이하 · 가로 1000px 이하)으로 변환
+  let canvas = await _cardToCanvasForSms('diagnosisTableWrap');
+  if (!canvas) return null;
+  return _canvasToJpegUnder(canvas, 190 * 1024, 1000);
+}
 async function submitForm(){
   let nameInput = document.getElementById('customerName');
   let phoneInput = document.getElementById('customerPhone');
@@ -1650,8 +1701,13 @@ async function submitForm(){
   };
   try{
     submitBtn.disabled = true;
+    submitBtn.textContent = '진단표 생성 중...';
+    let smsImage = null;
+    try { smsImage = await buildDiagnosisImageForSms(); }
+    catch(imgErr){ console.error('[문자] 이미지 생성 실패', imgErr); }
+    if (smsImage){ payload.image = smsImage.split(',')[1]; payload.imageName = '개인택시_양수진단표.jpg'; }
     submitBtn.textContent = '신청 중입니다...';
-    console.log('[DB전송] payload:', JSON.stringify(payload));
+    console.log('[DB전송] payload keys:', Object.keys(payload).join(','), '| image:', payload.image ? '첨부됨' : '없음');
     await fetch(GAS_WEB_APP_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload) });
     console.log('[DB전송] fetch 완료 (no-cors — 서버 응답 확인 불가)');
     alert('발송 신청이 완료되었습니다.\n입력하신 연락처로 맞춤 진단표와 필요 서류 목록을 곧 문자로 발송해드립니다.');
