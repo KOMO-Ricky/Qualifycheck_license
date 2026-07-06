@@ -1620,9 +1620,10 @@ async function _cardToCanvasForSms(targetId){
   }
 }
 function _estimateBase64Bytes(dataUrl){ let b = (dataUrl.split(',')[1] || ''); return Math.floor(b.length * 3 / 4); }
-function _canvasToJpegUnder(srcCanvas, maxBytes, maxWidth){
+function _canvasToJpegUnder(srcCanvas, maxBytes, maxWidth, maxHeight){
   let w = srcCanvas.width, h = srcCanvas.height;
-  let scale = Math.min(1, maxWidth / w);
+  // 가로·세로 한도를 모두 만족하도록 축소 (솔라피 MMS: 가로 1500 / 세로 1440px 이하)
+  let scale = Math.min(1, maxWidth / w, maxHeight ? maxHeight / h : 1);
   w = Math.round(w * scale); h = Math.round(h * scale);
   let c = document.createElement('canvas'), ctx;
   function redraw(){ c.width = w; c.height = h; ctx = c.getContext('2d'); ctx.fillStyle = '#FBF9F4'; ctx.fillRect(0,0,w,h); ctx.drawImage(srcCanvas,0,0,w,h); }
@@ -1634,10 +1635,10 @@ function _canvasToJpegUnder(srcCanvas, maxBytes, maxWidth){
   return dataUrl;
 }
 async function buildDiagnosisImageForSms(){
-  // 진단표를 브랜딩 카드로 렌더 → MMS 규격(JPG · 약 190KB 이하 · 가로 1000px 이하)으로 변환
+  // 진단표를 브랜딩 카드로 렌더 → MMS 규격(JPG · 약 190KB 이하 · 가로 1000px·세로 1400px 이하)으로 변환
   let canvas = await _cardToCanvasForSms('diagnosisTableWrap');
   if (!canvas) return null;
-  return _canvasToJpegUnder(canvas, 190 * 1024, 1000);
+  return _canvasToJpegUnder(canvas, 190 * 1024, 1000, 1400);
 }
 async function submitForm(){
   let nameInput = document.getElementById('customerName');
