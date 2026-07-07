@@ -310,7 +310,6 @@ img{max-width:100%;}
   .cover{min-height:auto;}
   .on-cover .rail{display:none;}
   .on-cover .app{grid-template-rows:1fr;}
-  #scr-sDocs .panel-inner{padding-bottom:80px;}
   .panel-inner{padding:16px 22px 0;}
   .btn-restart-qtitle{padding-bottom:12px;}
   .opts{margin-top:14px;}
@@ -597,16 +596,6 @@ img{max-width:100%;}
     </div>
   </section>
 
-  <section class="screen panel" id="scr-sDocs" data-stage="8" data-rail="맞춤 서류" data-chip="📂 맞춤 필요 서류" data-back="s8B1">
-    <div class="panel-inner">
-      <div class="panel-top"><button type="button" class="btn-back" onclick="go('s8B1',false)">← 이전</button><div class="chip-wrap"><span class="chip">📂 맞춤 필요 서류</span></div></div>
-      <div class="panel-body">
-<h2 class="q-title">나의 맞춤 필요 서류</h2><div class="notice" id="docSummary" style="border-left-color:#C9A86A;">응답 결과를 바탕으로 필요한 서류를 정리했습니다.</div>
-    <div id="docListWrap"></div>
-    <button type="button" class="btn-outline" onclick="downloadDocList()">🖼️ 서류 리스트 다운로드</button>
-      </div>
-    </div>
-  </section>
 
   <section class="screen panel" id="scr-s9B" data-stage="8" data-rail="진단표 문자 발송" data-chip="진단표 문자 발송" data-back="s8B1">
     <div class="panel-inner">
@@ -721,7 +710,6 @@ function go(id, pushStack){
 
   if (id === 's1' || id === 's2' || id === 's3' || id === 's7B1') updateRegionTexts();
   if (id === 's8B1') renderDiagnosisResult();
-  if (id === 'sDocs') renderDocList();
   if (id === 's9B') renderConsultPage();
 
   pendingAnswer = null;
@@ -735,7 +723,7 @@ function goBack(){
   else go('s0', false);
 }
 
-const NO_BOTBAR = ['s0','s0b','s5ACalc','s8B1','sDocs','s9B'];
+const NO_BOTBAR = ['s0','s0b','s5ACalc','s8B1','s9B'];
 function updateBotBar(id){
   if (NO_BOTBAR.includes(id)) return;
   let nextBtn = document.getElementById(id+'-next');
@@ -1405,7 +1393,6 @@ function renderDiagnosisResult(){
     let cls = classifyDiagValue(row[0], row[1]);
     return '<div class="result-row" style="animation-delay:'+(i*65+140)+'ms"><span>'+row[0]+'</span><b'+(cls?' class="'+cls+'"':'')+'>'+row[1]+'</b></div>';
   }).join('');
-  renderDocList();
 
   let banner = document.getElementById('diagEligibilityBanner');
   let eligible = isFullyEligible();
@@ -1469,7 +1456,7 @@ function getBasicDocs(){
     '주민등록초본 (전체주소)',
     '운전경력증명서 (전체경력)',
     '운전적성정밀검사[신규] 판정표 (사고 있을 시 [특별검사] 포함)',
-    '교육수료증 (사당동 신규교육 / 양수교육)'
+    '교육수료증 (사당동 신규교육 / 양수교육) - 경력자 별도 문의'
   ];
 }
 // 단일 경력 종류에 대한 필요 서류 (섹션 배열 반환 — 종류에 따라 2개 섹션일 수 있음)
@@ -1487,7 +1474,7 @@ function docsForType(type, period){
       '운전자명부 [법인도장 날인]'
     ],
     notes:[
-      '운전경력증명서 발급 후 서울시택시조합(교통회관 6층)에서 경력 확인 도장을 반드시 날인받아야 합니다.',
+      '운전경력증명서 발급 후 해당 지역 운송사업조합에서 경력 확인 도장을 반드시 날인받아야 합니다.',
       '사본에는 원본대조필 날인, 법인택시 서류는 전부 회사에서 발급됩니다.',
       '갑근세 증명서가 연말정산 전이라 발급이 어려우면, 중도퇴사자 연말정산용 원천징수영수증으로 요청하세요.'
     ]
@@ -1495,7 +1482,7 @@ function docsForType(type, period){
   if (type.includes('화물')) return [{
     title:'용달 · 화물 경력 필요 서류',
     items:[
-      '운전경력증명서 및 발급대장 (용달협회: 교통회관 10층)',
+      '운전경력증명서 및 발급대장 (해당 지역 용달협회)',
       '건강보험 자격득실 확인서 (국민건강보험공단: 1577-1000)',
       '부가가치세과세표준증명 (세무서) — 해당 경력 기간만큼',
       '유가보조금지급내역서 (각 카드사) — 해당 경력 기간만큼'
@@ -1545,8 +1532,10 @@ function docsForType(type, period){
 function getExtraDocsList(){
   let raw = state.commercialExpType || '';
   let period = state.accidentFreePeriod || '';
-  let types = raw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
-  if (types.length === 0) types = [''];
+  // 미경력자('없음')·미상은 경력별 추가 서류가 없으므로 제외 → 기본 서류만 안내
+  let types = raw.split(',').map(function(s){ return s.trim(); })
+                 .filter(function(t){ return t && t !== '없음'; });
+  if (types.length === 0) return [];
   let seen = {}, list = [];
   types.forEach(function(t){
     docsForType(t, period).forEach(function(d){
@@ -1557,125 +1546,6 @@ function getExtraDocsList(){
 }
 // (하위 호환) 첫 번째 경력 종류의 서류
 function getExtraDocs(){ return getExtraDocsList()[0]; }
-function renderDocList(){
-  let target = document.getElementById('docListWrap');
-  let summary = document.getElementById('docSummary');
-  let basic = getBasicDocs();
-  let extras = getExtraDocsList();
-  summary.innerHTML = '<div class="notice-h">서류 안내</div><p>응답 결과를 바탕으로 필요한 서류를 정리했습니다.</p>';
-  let basicHtml = basic.map(function(i){ return '<div class="doc-item"><span class="dot"></span><div>'+i+'</div></div>'; }).join('');
-  let extraHtml = extras.map(function(extra){
-    let items = (extra.items||[]).map(function(i){ return '<div class="doc-item"><span class="dot"></span><div>'+i+'</div></div>'; }).join('');
-    let notes = (extra.notes||[]).map(function(nt){ return '<p class="hint" style="margin-top:8px;">※ '+nt+'</p>'; }).join('');
-    return '<div class="doc-list" style="margin-top:14px;"><div class="doc-list-h">📂 '+(extra.title||'맞춤 추가 서류')+(extra.subtitle?' ('+extra.subtitle+')':'')+'</div><div class="doc-list-body">'+items+'</div>'+notes+'</div>';
-  }).join('');
-  target.innerHTML =
-    '<div class="doc-list"><div class="doc-list-h">📄 기본 필요 서류</div><div class="doc-list-body">'+basicHtml+'</div></div>' +
-    extraHtml;
-}
-
-/* ── 캡처/다운로드 ── */
-function showMoToast(msg, duration){
-  let existing = document.getElementById('mo-toast'); if (existing) existing.remove();
-  let toast = document.createElement('div');
-  toast.id = 'mo-toast'; toast.className = 'mo-toast'; toast.style.bottom = '24px';
-  toast.textContent = msg;
-  document.body.appendChild(toast);
-  setTimeout(function(){ if (toast.parentNode) toast.remove(); }, duration || 3500);
-}
-function isIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
-async function captureWithWatermark(targetId, filename, silent){
-  let target = document.getElementById(targetId);
-  if (!target){ alert('저장할 항목을 찾을 수 없습니다.'); return null; }
-  if (typeof html2canvas === 'undefined'){ alert('이미지 생성 라이브러리를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.'); return null; }
-  if (!silent) showMoToast('이미지를 생성하고 있습니다…', 5000);
-  let isDocList = targetId === 'docListWrap';
-  let cardWidth = Math.max(target.offsetWidth + 64, 360);
-  let card = document.createElement('div');
-  card.style.cssText = 'position:fixed;left:-99999px;top:0;width:'+cardWidth+'px;background:#FBF9F4;font-family:"Noto Sans KR",sans-serif;';
-  let header = document.createElement('div');
-  header.style.cssText = 'background:linear-gradient(135deg,#1B2735,#10161F);padding:20px 24px 16px;';
-  header.innerHTML = '<div style="font-size:15px;font-weight:800;color:#C9A86A;margin-bottom:4px;">개인택시 양수도센터</div><div style="font-size:18px;font-weight:900;color:#fff;">'+(isDocList?'맞춤 필요 서류 리스트':'양수 자격 진단표')+'</div>';
-  let bodyWrap = document.createElement('div');
-  bodyWrap.style.cssText = 'padding:20px;background:#FBF9F4;';
-  let clone = target.cloneNode(true);
-  clone.style.cssText = 'background:#fff;border-radius:14px;overflow:hidden;padding:14px 18px;';
-  clone.querySelectorAll('.result-row,.seal').forEach(function(el){ el.style.animation='none'; el.style.opacity='1'; el.style.transform=''; });
-  bodyWrap.appendChild(clone);
-  let footer = document.createElement('div');
-  footer.style.cssText = 'background:#10161F;padding:14px 20px 16px;text-align:center;';
-  footer.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:6px;">본 진단 결과는 참고용입니다</div><div style="font-size:13px;color:#fff;font-weight:700;">개인택시 양수도센터</div><div style="font-size:16px;color:#C9A86A;font-weight:900;">1566-7114</div>';
-  card.appendChild(header); card.appendChild(bodyWrap); card.appendChild(footer);
-  document.body.appendChild(card);
-  try{
-    let canvas = await html2canvas(card, {backgroundColor:'#FBF9F4', scale:2, useCORS:true, logging:false});
-    document.body.removeChild(card);
-    let dataUrl = canvas.toDataURL('image/png');
-    saveImageToGallery(dataUrl, filename, silent);
-    return dataUrl;
-  } catch(e){
-    if (card.parentNode) document.body.removeChild(card);
-    alert('이미지 생성 중 오류가 발생했습니다.\n다시 시도해 주세요.');
-    console.error(e);
-    return null;
-  }
-}
-function saveImageToGallery(dataUrl, filename, silent){
-  if (isIOS()){
-    showIOSSequentialOverlay([{dataUrl, filename, label: filename.replace('.png','').replace(/_/g,' ')}]);
-  } else {
-    let a = document.createElement('a');
-    a.href = dataUrl; a.download = filename;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    if (!silent) showMoToast('📂 갤러리(사진 앱)에 저장되었습니다.\n저장되지 않은 경우 다운로드 폴더를 확인해 주세요.', 4000);
-  }
-}
-function showIOSSequentialOverlay(items, index){
-  index = index || 0;
-  if (index >= items.length) return;
-  let item = items[index];
-  let existing = document.getElementById('ios-img-overlay'); if (existing) existing.remove();
-  let isLast = index === items.length - 1;
-  let overlay = document.createElement('div');
-  overlay.id = 'ios-img-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.93);display:flex;flex-direction:column;align-items:center;overflow-y:auto;';
-  let btnLabel = isLast ? '저장 완료 → 닫기' : '저장했어요 → 다음 이미지 ('+(index+2)+'/'+items.length+')';
-  overlay.innerHTML =
-    '<div style="width:100%;background:#1B2735;padding:16px 20px;text-align:center;box-sizing:border-box;">' +
-      '<div style="color:rgba(255,255,255,.75);font-size:12px;font-weight:700;margin-bottom:4px;">'+item.label+'</div>' +
-      '<div style="color:#fff;font-size:15px;font-weight:800;margin-bottom:4px;">📥 아래 이미지를 꾹 눌러 저장하세요</div>' +
-      '<div style="color:rgba(255,255,255,.85);font-size:13px;line-height:1.6;">이미지를 <strong>길게 누른 후</strong> <strong>"사진 앱에 추가"</strong>를 선택해 주세요</div>' +
-    '</div>' +
-    '<img src="'+item.dataUrl+'" alt="'+item.filename+'" style="width:100%;max-width:680px;display:block;margin:0 auto;">' +
-    '<button id="ios-next-btn" style="flex-shrink:0;margin:20px 0 32px;padding:14px 48px;border-radius:50px;background:#fff;color:#1B2735;border:none;font-size:15px;font-weight:800;cursor:pointer;">'+btnLabel+'</button>';
-  document.body.appendChild(overlay);
-  document.getElementById('ios-next-btn').addEventListener('click', function(){
-    overlay.remove();
-    if (!isLast) showIOSSequentialOverlay(items, index+1);
-  });
-}
-async function downloadDiagnosisAndDocs(){
-  let type = state.commercialExpType || '';
-  if (isIOS()){
-    showMoToast('이미지를 생성하고 있습니다…', 5000);
-    let dataUrl1 = await captureWithWatermark('diagnosisTableWrap', '개인택시_양수진단표.png', true);
-    renderDocList();
-    let dataUrl2 = await captureWithWatermark('docListWrap', '개인택시_필요서류리스트.png', true);
-    if (dataUrl1 && dataUrl2){
-      showIOSSequentialOverlay([
-        {dataUrl:dataUrl1, filename:'개인택시_양수진단표.png', label:'1/2 · 양수 진단표'},
-        {dataUrl:dataUrl2, filename:'개인택시_필요서류리스트.png', label:'2/2 · 필요 서류 리스트'}
-      ]);
-    }
-  } else {
-    await captureWithWatermark('diagnosisTableWrap', '개인택시_양수진단표.png', true);
-    renderDocList();
-    await new Promise(r => setTimeout(r, 300));
-    await captureWithWatermark('docListWrap', '개인택시_필요서류리스트.png', true);
-    showMoToast('📂 진단표 + 필요 서류가 갤러리(사진 앱)에 저장되었습니다.\n저장되지 않은 경우 다운로드 폴더를 확인해 주세요.', 4500);
-  }
-}
-async function downloadDocList(){ await captureWithWatermark('docListWrap', '개인택시_필요서류리스트.png'); }
 
 /* ── 상담 신청 ── */
 function getTrafficSource(){
@@ -1703,35 +1573,6 @@ function syncAgreeAll(){
   var b=document.getElementById("submitBtn"); if(b&&a) b.disabled=!a.checked;
 }
 /* ── 문자(MMS) 발송용 진단표 이미지 생성 ── */
-async function _cardToCanvasForSms(targetId){
-  let target = document.getElementById(targetId);
-  if (!target) return null;
-  if (typeof html2canvas === 'undefined') return null;
-  let isDocList = targetId === 'docListWrap';
-  let cardWidth = Math.max(target.offsetWidth + 64, 360);
-  let card = document.createElement('div');
-  card.style.cssText = 'position:fixed;left:-99999px;top:0;width:'+cardWidth+'px;background:#FBF9F4;font-family:"Noto Sans KR",sans-serif;';
-  let header = document.createElement('div');
-  header.style.cssText = 'background:linear-gradient(135deg,#1B2735,#10161F);padding:20px 24px 16px;';
-  header.innerHTML = '<div style="font-size:15px;font-weight:800;color:#C9A86A;margin-bottom:4px;">개인택시 양수도센터</div><div style="font-size:18px;font-weight:900;color:#fff;">'+(isDocList?'맞춤 필요 서류 리스트':'양수 자격 진단표')+'</div>';
-  let bodyWrap = document.createElement('div');
-  bodyWrap.style.cssText = 'padding:20px;background:#FBF9F4;';
-  let clone = target.cloneNode(true);
-  clone.style.cssText = 'background:#fff;border-radius:14px;overflow:hidden;padding:14px 18px;';
-  clone.querySelectorAll('.result-row,.seal').forEach(function(el){ el.style.animation='none'; el.style.opacity='1'; el.style.transform=''; });
-  bodyWrap.appendChild(clone);
-  let footer = document.createElement('div');
-  footer.style.cssText = 'background:#10161F;padding:14px 20px 16px;text-align:center;';
-  footer.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:6px;">본 진단 결과는 참고용입니다</div><div style="font-size:13px;color:#fff;font-weight:700;">개인택시 양수도센터</div><div style="font-size:16px;color:#C9A86A;font-weight:900;">1566-7114</div>';
-  card.appendChild(header); card.appendChild(bodyWrap); card.appendChild(footer);
-  document.body.appendChild(card);
-  try{
-    let canvas = await html2canvas(card, {backgroundColor:'#FBF9F4', scale:2, useCORS:true, logging:false});
-    return canvas;
-  } finally {
-    if (card.parentNode) document.body.removeChild(card);
-  }
-}
 function _estimateBase64Bytes(dataUrl){ let b = (dataUrl.split(',')[1] || ''); return Math.floor(b.length * 3 / 4); }
 function _canvasToJpegUnder(srcCanvas, maxBytes, maxWidth, maxHeight){
   let w = srcCanvas.width, h = srcCanvas.height;
@@ -1790,72 +1631,34 @@ async function buildDiagnosisImageForSms(){
   if (!canvas) return null;
   return _canvasToJpegUnder(canvas, 190 * 1024, 1000, 1400);
 }
-// 진단표 + 맞춤 필요 서류를 한 장의 브랜딩 카드로 합쳐 렌더
-async function _combinedCardToCanvasForSms(){
-  if (typeof html2canvas === 'undefined') return null;
-  let t1 = document.getElementById('diagnosisTableWrap');
-  let t2 = document.getElementById('docListWrap');
-  if (!t1 && !t2) return null;
-  let cardWidth = Math.max((t1 ? t1.offsetWidth : 0) + 64, (t2 ? t2.offsetWidth : 0) + 64, 360);
-  let card = document.createElement('div');
-  card.style.cssText = 'position:fixed;left:-99999px;top:0;width:'+cardWidth+'px;background:#FBF9F4;font-family:"Noto Sans KR",sans-serif;';
-  let header = document.createElement('div');
-  header.style.cssText = 'background:linear-gradient(135deg,#1B2735,#10161F);padding:20px 24px 16px;';
-  header.innerHTML = '<div style="font-size:15px;font-weight:800;color:#C9A86A;margin-bottom:4px;">개인택시 양수도센터</div><div style="font-size:18px;font-weight:900;color:#fff;">양수 자격 진단표 &amp; 맞춤 필요 서류</div>';
-  card.appendChild(header);
-  function section(title, target){
-    if (!target) return;
-    let wrap = document.createElement('div');
-    wrap.style.cssText = 'padding:18px 20px 4px;background:#FBF9F4;';
-    let h = document.createElement('div');
-    h.style.cssText = 'font-size:15px;font-weight:800;color:#1B2735;margin:0 2px 10px;';
-    h.textContent = title;
-    let clone = target.cloneNode(true);
-    clone.style.cssText = 'background:#fff;border-radius:14px;overflow:hidden;padding:14px 18px;';
-    clone.querySelectorAll('.result-row,.seal').forEach(function(el){ el.style.animation='none'; el.style.opacity='1'; el.style.transform=''; });
-    wrap.appendChild(h); wrap.appendChild(clone);
-    card.appendChild(wrap);
-  }
-  section('■ 양수 자격 진단표', t1);
-  section('■ 나의 맞춤 필요 서류', t2);
-  let footer = document.createElement('div');
-  footer.style.cssText = 'background:#10161F;padding:14px 20px 16px;text-align:center;margin-top:14px;';
-  footer.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:6px;">본 진단 결과는 참고용입니다</div><div style="font-size:13px;color:#fff;font-weight:700;">개인택시 양수도센터</div><div style="font-size:16px;color:#C9A86A;font-weight:900;">1566-7114</div>';
-  card.appendChild(footer);
-  document.body.appendChild(card);
-  try{
-    let canvas = await html2canvas(card, {backgroundColor:'#FBF9F4', scale:2, useCORS:true, logging:false});
-    return canvas;
-  } finally {
-    if (card.parentNode) document.body.removeChild(card);
-  }
-}
-async function buildCombinedImageForSms(){
-  // 서류 목록이 아직 안 그려졌을 수 있으니 먼저 채운다
-  if (typeof renderDocList === 'function'){ try { renderDocList(); } catch(e){} }
-  let canvas = await _combinedCardToCanvasForSms();
-  if (!canvas) return null;
-  return _canvasToJpegUnder(canvas, 190 * 1024, 1000, 1400);
-}
-// 맞춤 필요 서류 목록을 문자 본문용 텍스트로 변환
-function buildDocListText(includeNotes){
-  let basic = getBasicDocs();
-  let extras = getExtraDocsList();
+// 문자열의 대략적 바이트 수(한글 2 / ASCII 1) — MMS 2000바이트 한도 체크용
+function _smsByteLen(s){ let b=0; for (let i=0;i<s.length;i++){ b += s.charCodeAt(i) > 127 ? 2 : 1; } return b; }
+// 기본 서류 텍스트
+function _basicDocsText(){
   let lines = ['[기본 필요 서류]'];
-  basic.forEach(function(i){ lines.push('· ' + i); });
-  extras.forEach(function(extra){
+  getBasicDocs().forEach(function(i){ lines.push('· ' + i); });
+  return lines.join('\n');
+}
+// 주어진 경력 섹션들의 서류 텍스트
+function _sectionsText(sections){
+  let lines = [];
+  sections.forEach(function(extra){
     if (extra && extra.items && extra.items.length){
-      lines.push('');
+      if (lines.length) lines.push('');
       lines.push('[' + (extra.title || '맞춤 추가 서류') + (extra.subtitle ? ' (' + extra.subtitle + ')' : '') + ']');
       extra.items.forEach(function(i){ lines.push('· ' + i); });
-      if (includeNotes !== false) (extra.notes||[]).forEach(function(nt){ lines.push('  ※ ' + nt); });
+      (extra.notes||[]).forEach(function(nt){ lines.push('  ※ ' + nt); });
     }
   });
   return lines.join('\n');
 }
-// 문자열의 대략적 바이트 수(한글 2 / ASCII 1) — MMS 2000바이트 한도 체크용
-function _smsByteLen(s){ let b=0; for (let i=0;i<s.length;i++){ b += s.charCodeAt(i) > 127 ? 2 : 1; } return b; }
-function _composeSmsText(includeNotes){
+// (하위 호환) 전체 서류 목록 텍스트
+function buildDocListText(){
+  let sec = _sectionsText(getExtraDocsList());
+  return sec ? (_basicDocsText() + '\n\n' + sec) : _basicDocsText();
+}
+// 1번(또는 단독) 문자: 인사말 + 서류(docText) + 마무리/연락처
+function _composeMsg1(docText){
   return [
     '[개인택시 양수도센터]',
     '',
@@ -1864,7 +1667,7 @@ function _composeSmsText(includeNotes){
     '예비 양수자님께서 작성해주신 내용을 바탕으로 분석한 <양수 자격 진단표>와 <맞춤형 필요 서류 목록>을 보내드립니다.',
     '',
     '',
-    buildDocListText(includeNotes),
+    docText,
     '',
     '',
     '복잡하고 어렵게 느껴질 수 있는 개인택시 양수 과정, 시작부터 끝까지 원활하게 진행되실 수 있도록 저희 센터가 든든한 파트너가 되어 드리겠습니다.',
@@ -1881,12 +1684,31 @@ function _composeSmsText(includeNotes){
     '▶ 양수도 정보공유 카페: https://cafe.naver.com/taxilab/'
   ].join('\n');
 }
-// 문자 본문 전체 생성. MMS 2000바이트 초과 시 참고 주석(※)을 자동 제외
-function buildSmsText(){
-  let full = _composeSmsText(true);
-  if (_smsByteLen(full) > 1950) full = _composeSmsText(false);
-  return full;
+// 2번(이어서) 문자: 나머지 서류 목록
+function _composeMsg2(docText){
+  return [
+    '[개인택시 양수도센터]',
+    '',
+    '(이어서) 추가로 준비하셔야 할 서류입니다.',
+    '',
+    docText
+  ].join('\n');
 }
+// 발송할 문자 배열 반환. 2000바이트 초과 시 두 통으로 분할(첫 경력 서류 + 나머지)
+function buildSmsMessages(){
+  let extras = getExtraDocsList();
+  let allDoc = _basicDocsText() + (extras.length ? '\n\n' + _sectionsText(extras) : '');
+  let full = _composeMsg1(allDoc);
+  if (_smsByteLen(full) <= 2000) return [full];
+  // 초과 → 분할: 첫 경력 섹션은 1번 문자, 나머지 섹션은 2번 문자
+  let first = extras.slice(0, 1), rest = extras.slice(1);
+  let doc1 = _basicDocsText() + (first.length ? '\n\n' + _sectionsText(first) : '');
+  let msg1 = _composeMsg1(doc1);
+  let msg2 = _composeMsg2(_sectionsText(rest));
+  return [msg1, msg2];
+}
+// (하위 호환) 첫 번째 문자만
+function buildSmsText(){ return buildSmsMessages()[0]; }
 // 현재 시각을 한국(KST, UTC+9) 기준 'YYYY-MM-DD HH:mm:ss' 문자열로 반환
 function nowKST(){
   let k = new Date(Date.now() + 9*60*60*1000);
@@ -1922,7 +1744,7 @@ async function submitForm(){
   if (isExperienced){ careerQualifyText = t6>=60 ? '충족 : 최근 6년 내 5년 이상' : t3>=30 ? '충족 : 최근 3년 내 2년 6개월 이상' : '미충족'; }
   else careerQualifyText = state.accidentFreePeriod;
   let careerDetailText = '';
-  if (isExperienced){
+  if (isExperienced && (t3 > 0 || t6 > 0)){
     let isDrivingOnly = expType === '법인/기관 운전직';
     careerDetailText = isDrivingOnly ? t6+'개월(최근 6년 내)' : t3+'개월(최근 3년 내) / '+t6+'개월(최근 6년 내)';
   }
@@ -1957,7 +1779,7 @@ async function submitForm(){
   try{
     submitBtn.disabled = true;
     submitBtn.textContent = '진단표 생성 중...';
-    try { payload.smsText = buildSmsText(); } catch(txtErr){ console.error('[문자] 본문 생성 실패', txtErr); }
+    try { let _msgs = buildSmsMessages(); payload.smsText = _msgs[0]; if (_msgs[1]) payload.smsText2 = _msgs[1]; } catch(txtErr){ console.error('[문자] 본문 생성 실패', txtErr); }
     let smsImage = null;
     try { smsImage = await buildDiagnosisImageForSms(); }
     catch(imgErr){ console.error('[문자] 이미지 생성 실패', imgErr); payload.imgError = String((imgErr && imgErr.message) || imgErr); }
@@ -1965,8 +1787,9 @@ async function submitForm(){
     else if (!payload.imgError){ payload.imgError = (typeof html2canvas === 'undefined') ? 'html2canvas 미로딩(CDN 차단/로딩실패)' : '이미지 생성결과 없음(대상요소 없음 등)'; }
     submitBtn.textContent = '신청 중입니다...';
     console.log('[DB전송] payload keys:', Object.keys(payload).join(','), '| image:', payload.image ? '첨부됨' : '없음');
-    await fetch(GAS_WEB_APP_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload) });
-    console.log('[DB전송] fetch 완료 (no-cors — 서버 응답 확인 불가)');
+    // 서버 응답을 기다리지 않고 즉시 안내 (문자 발송·결과 확인은 서버가 백그라운드로 처리)
+    fetch(GAS_WEB_APP_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload) })
+      .catch(function(err){ console.error('[DB전송] 실패', err); });
     alert('발송 신청이 완료되었습니다.\n입력하신 연락처로 맞춤 진단표와 필요 서류 목록을 곧 문자로 발송해드립니다.');
     nameInput.value=''; phoneInput.value=''; if (agree) agree.checked=false; submitBtn.disabled=true;
   } catch(e){
