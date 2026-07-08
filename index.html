@@ -109,8 +109,13 @@ img{max-width:100%;}
 .chip-wrap{display:inline-flex;}
 .chip{display:inline-flex;align-items:center;background:#F4ECD9;border:1px solid #E6D6AC;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:800;color:#8C7038;letter-spacing:1px;}
 .panel-body{display:flex;flex-direction:column;}
+/* 본문 영역 줄바꿈: 한글은 단어(어절) 단위로만 끊기고, 긴 단어/URL만 강제 분리 */
+.panel-body, .panel-body h2, .panel-body p, .panel-body span, .panel-body div,
+.panel-body b, .panel-body label, .panel-body button, .panel-body li, .panel-body strong{
+  word-break:keep-all; overflow-wrap:break-word;
+}
 .q-title{font-size:clamp(22px,5.2vw,29px);font-weight:800;line-height:1.36;letter-spacing:-.5px;white-space:pre-line;}
-.q-sub{font-size:12.5px;color:var(--muted);line-height:1.75;margin-top:14px;white-space:pre-line;}
+.q-sub{font-size:15.5px;color:var(--muted);line-height:1.75;margin-top:14px;white-space:pre-line;}
 .sample{margin-top:14px;}
 .sample-btn{display:inline-flex;align-items:center;gap:7px;padding:11px 15px;background:#FBF7EE;border:1px solid #E6D6AC;border-radius:7px;font-size:12px;font-weight:800;color:#8C7038;cursor:pointer;}
 .sample-issuer{font-size:10.5px;color:#9A968C;margin-top:7px;}
@@ -286,7 +291,7 @@ img{max-width:100%;}
 @media (max-width:699px){
   html,body{height:100%;}
   .app{display:grid;grid-template-columns:1fr;grid-template-rows:auto 1fr auto;height:100%;min-height:100svh;}
-  .rail{position:sticky;top:0;height:auto;min-height:0;align-self:auto;padding:max(16px,env(safe-area-inset-top)) 22px 18px;background:linear-gradient(135deg,#141A22,#0B0F15);z-index:30;overflow:visible;}
+  .rail{position:sticky;top:0;height:auto;min-height:auto;align-self:auto;padding:max(16px,env(safe-area-inset-top)) 22px 18px;background:linear-gradient(135deg,#141A22,#0B0F15);z-index:30;overflow:visible;}
   .rail-brand{justify-content:space-between;align-items:center;gap:10px;}
   .rail-logo{display:none;}
   .rail-name{font-size:15px;}
@@ -325,6 +330,7 @@ img{max-width:100%;}
   .footer-band .fb-links a i{width:clamp(13px,3.5vw,16px);height:clamp(13px,3.5vw,16px);font-size:clamp(8px,2.2vw,9.5px);}
   .calc-dates>div{min-width:0;}
   .calc-box input,.calc-box select{font-size:12px;padding:9px 8px;}
+  .q-sub{font-size:12.5px;}
 }
 @keyframes coverIn{from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:translateY(0);}}
 @keyframes qIn{from{opacity:0;transform:translateY(16px) scale(.99);}to{opacity:1;transform:translateY(0) scale(1);}}
@@ -533,7 +539,7 @@ img{max-width:100%;}
         <div id="calcResultRows"></div>
       </div>
       <div class="calc-result" id="calcEduBox">
-        <div class="calc-result-h">🎓 교육 면제 판정</div>
+        <div class="calc-result-h">🎓 교육 면제 여부</div>
         <div id="calcEduRows"></div>
       </div>
       <p class="hint">경력 종류를 선택하면 입력란이 자동으로 추가됩니다. 법인/기관 운전직 경력은 1/2로 환산 합산됩니다. 가장 오래된 경력부터 순서대로 입력해 주세요.</p>
@@ -652,7 +658,7 @@ const state = {
   residenceHistory: '', currentSeoul: '', taxiCert: '', aptitudeTest: '',
   transferEducation: '', commercialExp: '', commercialExpType: '',
   accidentFreePeriod: '', newEducation: '', consultationEligible: '',
-  multiCareerNotice: ''
+  multiCareerNotice: '', docExpTypes: ''
 };
 
 const LEDGER_ORDER = [
@@ -682,8 +688,24 @@ const _SCREEN_STATES = {
     let ab=document.getElementById('calcAddBtn');if(ab)ab.disabled=true;
   },
   's7B1': function(){state.newEducation='';state.experiencedNewEducation='';state.corpTaxiQuitPeriod='';},
-  's6': function(){state.accidentFreePeriod='';},
+  's5B': function(){state.accidentFreePeriod='';},
 };
+// 제목(q-title)이 의도한 줄 수보다 살짝 넘칠 때(어절 줄바꿈으로 한 줄 더 생길 때)
+// 폰트를 소폭 줄여 한 줄을 회수한다. 과도한 축소(가독성 저하)는 하지 않는다.
+function fitActiveTitle(){
+  let scr = document.querySelector('.screen.active'); if (!scr) return;
+  let el = scr.querySelector('.q-title'); if (!el) return;
+  el.style.fontSize = '';
+  let intended = el.innerHTML.split(/<br\s*\/?>/i).length; // <br> 기준 의도한 줄 수
+  function lineCount(){ let lh = parseFloat(getComputedStyle(el).lineHeight)||1; return Math.round(el.scrollHeight / lh); }
+  if (lineCount() <= intended) return; // 넘치지 않으면 그대로
+  let base = parseFloat(getComputedStyle(el).fontSize);
+  for (let size = base-1; size >= base*0.82; size-=1){
+    el.style.fontSize = size+'px';
+    if (lineCount() <= intended){ return; }
+  }
+  el.style.fontSize = ''; // 축소로도 못 맞추면(진짜 긴 제목) 원복해 과도 축소 방지
+}
 function go(id, pushStack){
   if (pushStack === undefined) pushStack = true;
   let cur = document.querySelector('.screen.active');
@@ -696,6 +718,25 @@ function go(id, pushStack){
   if (pushStack && curId && curId !== id) navStack.push(curId);
 
   document.body.classList.toggle('on-cover', id === 's0');
+
+  // 뒤로 이동해 돌아온 화면은 이전 입력/선택을 해제하고 다시 고르게 초기화
+  if (pushStack === false) {
+    if (next.querySelectorAll('.opt').length) {
+      // 선택지형 화면: 선택 해제 + 상태 초기화 + 다음 버튼 비활성화
+      next.querySelectorAll('.opt').forEach(function(b){ b.classList.remove('selected'); });
+      if (_SCREEN_STATES[id]) _SCREEN_STATES[id]();
+      let nb = next.querySelector('.btn-next'); if (nb) nb.disabled = true;
+    } else if (id === 'sRegion') {
+      // 운행 희망 지역: 드롭다운 값·시/군·다음 버튼까지 초기화
+      let sido = document.getElementById('regionSido'); if (sido) sido.value = '';
+      if (typeof updateRegionOptions === 'function') updateRegionOptions();
+    } else if (id === 's5ACalc') {
+      // 경력 계산기: 추가한 경력 박스·값·결과를 완전 초기화
+      window._calcTotal3yr = 0; window._calcTotal6yr = 0; window._calcNeedsNewEdu = undefined;
+      state.commercialExpType = ''; state.transferEducation = ''; state.accidentFreePeriod = ''; state.docExpTypes = '';
+      if (typeof initCalc === 'function') initCalc();
+    }
+  }
 
   let stage = parseInt(next.getAttribute('data-stage')||'0',10);
   let rail = next.getAttribute('data-rail')||'진단';
@@ -714,10 +755,22 @@ function go(id, pushStack){
 
   pendingAnswer = null;
   updateBotBar(id);
-  window.scrollTo({top:0});
+  // 화면 전환 시 스크롤을 최상단으로 리셋. 스크롤러가 window/documentElement/body/패널 중
+  // 무엇이든(특히 모바일은 body/패널) 남지 않도록 모두 초기화한다.
+  if (cur) cur.scrollTop = 0;
+  next.scrollTop = 0;
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
   let inner = next.querySelector('.panel-inner');
   if (inner) { inner.style.animation='none'; void inner.offsetWidth; inner.style.animation=''; }
+  fitActiveTitle();
 }
+let _fitTitleTimer;
+window.addEventListener('resize', function(){
+  clearTimeout(_fitTitleTimer);
+  _fitTitleTimer = setTimeout(fitActiveTitle, 150);
+});
 function goBack(){
   if (navStack.length) go(navStack.pop(), false);
   else go('s0', false);
@@ -872,7 +925,7 @@ function updateRegionTexts(){
   let regionFull = isSeoul ? '서울시' : (sigungu || sido);
 
   let s1title = document.getElementById('s1-title');
-  if (s1title) s1title.innerHTML = regionName + ' 거주 이력은<br>어느 정도이신가요?';
+  if (s1title) s1title.innerHTML = regionFull + '에서 거주한<br>기간은 어느 정도인가요?';
   let s1chip = document.getElementById('s1-chip');
   if (s1chip) s1chip.textContent = 'STEP 1 · ' + (isSeoul ? '서울시 거주 이력' : '운행희망지역 거주 이력');
   let s1sub = document.getElementById('s1-sub');
@@ -881,7 +934,7 @@ function updateRegionTexts(){
     : '서류 접수일 기준 운행희망지역 지자체에서 기준한 만큼의 거주 이력이 필요합니다.';
 
   let s2title = document.getElementById('s2-title');
-  if (s2title) s2title.innerHTML = '현재 ' + regionName + '에<br>거주 중이신가요?';
+  if (s2title) s2title.innerHTML = '현재 ' + regionFull + '에<br>거주 중이신가요?';
   let s2sub = document.getElementById('s2-sub');
   if (s2sub){ if (isSeoul){ s2sub.textContent = '서류 접수일 기준 거주지가 ' + regionFull + '이어야 합니다.'; s2sub.style.display = ''; } else { s2sub.textContent = ''; s2sub.style.display = 'none'; } }
 
@@ -966,7 +1019,7 @@ function handleTransferEducation(value, btn){
       title:'양수교육 알림 서비스 신청',
       message:'저희 양수도센터에서는 예비 양수자 여러분의 원활한 양수교육 접수를 위해 양수교육 일정을 알려드리는 서비스를 시행하고 있습니다.\n\n본인의 요건에 해당하는 양수교육 접수일을 문자로 알려드리니 신청하시고 놓치지 않게 양수교육 접수하시기 바랍니다.',
       buttons:[
-        {text:'신청하기', className:'btn-primary', href:'https://forms.gle/nu5zfR42y6c1k7HE9'},
+        {text:'신청하기', className:'btn-primary', href:'https://komolab-service.netlify.app/'},
         {text:'이어서 진행', className:'btn-link-neutral'}
       ]
     });
@@ -978,6 +1031,7 @@ function handleCommercialExp(value, btn){
     setPending(btn, function(){ goCalc('s4'); });
   } else {
     state.commercialExpType = '없음';
+    state.docExpTypes = '';
     setPending(btn, function(){ go('s5B'); });
   }
 }
@@ -1021,6 +1075,7 @@ function goCalc(fromScreen){
 let calcRowCount = 0;
 function initCalc(){
   let wrap = document.getElementById('calcRows');
+  state.docExpTypes = '';
   calcRowCount = 0;
   wrap.innerHTML = '';
   addCalcRow();
@@ -1144,6 +1199,51 @@ function formatMonths(months, cap){
   if (y>0) return y+'년';
   return m+'개월';
 }
+// 주어진 경력 목록의 3년/6년 인정 개월 계산 (운전직 1/2 환산 규칙 포함)
+function computeCareerMonths(entries){
+  let today = getTodayMonth();
+  let sixYearsAgo = getMonthOffset(today, -72);
+  let threeYearsAgo = getMonthOffset(today, -36);
+  let normalSet = new Set(), drivingSet = new Set();
+  entries.forEach(function(e){
+    let cur = e.start;
+    while (cur <= e.end){
+      if (e.type === '법인/기관 운전직') drivingSet.add(cur); else normalSet.add(cur);
+      cur = getMonthOffset(cur, 1);
+    }
+  });
+  normalSet.forEach(function(m){ drivingSet.delete(m); });
+  let hasOtherType = entries.some(function(e){ return e.type !== '법인/기관 운전직'; });
+  let drivingFactor = hasOtherType ? 0.5 : 1;
+  let count6=0, count3=0;
+  normalSet.forEach(function(m){ if (m>=sixYearsAgo && m<=today) count6+=1; if (m>=threeYearsAgo && m<=today) count3+=1; });
+  drivingSet.forEach(function(m){ if (m>=sixYearsAgo && m<=today) count6+=drivingFactor; if (m>=threeYearsAgo && m<=today) count3+=drivingFactor; });
+  let t6 = Math.floor(count6), t3 = Math.floor(count3);
+  return { t3:t3, t6:t6, qualifies:(t6>=60 || t3>=30) };
+}
+function _combinations(arr, k){
+  let res = [];
+  (function rec(start, combo){
+    if (combo.length === k){ res.push(combo.slice()); return; }
+    for (let i=start;i<arr.length;i++){ combo.push(arr[i]); rec(i+1, combo); combo.pop(); }
+  })(0, []);
+  return res;
+}
+// 충족에 꼭 필요한 최소 경력 종류 조합을 찾음 (동점이면 인정 개월이 많은 조합)
+function findEssentialTypes(entries){
+  let types = Array.from(new Set(entries.map(function(e){ return e.type; })));
+  if (types.length <= 1 || !computeCareerMonths(entries).qualifies) return { essential: types, redundant: [] };
+  for (let size=1; size<types.length; size++){
+    let best=null, bestMonths=-1;
+    _combinations(types, size).forEach(function(combo){
+      let sub = entries.filter(function(e){ return combo.indexOf(e.type) !== -1; });
+      let mm = computeCareerMonths(sub);
+      if (mm.qualifies){ let months = Math.max(mm.t3, mm.t6); if (months > bestMonths){ bestMonths = months; best = combo; } }
+    });
+    if (best) return { essential: best, redundant: types.filter(function(t){ return best.indexOf(t) === -1; }) };
+  }
+  return { essential: types, redundant: [] };
+}
 function runCalc(){
   let rows = document.querySelectorAll('#calcRows .calc-box');
   rows.forEach(function(row){
@@ -1195,23 +1295,14 @@ function runCalc(){
   }
 
   let today = getTodayMonth();
-  let sixYearsAgo = getMonthOffset(today, -72);
-  let threeYearsAgo = getMonthOffset(today, -36);
-  let normalSet = new Set(), drivingSet = new Set();
-  entries.forEach(function(e){
-    let cur = e.start;
-    while (cur <= e.end){
-      if (e.type === '법인/기관 운전직') drivingSet.add(cur); else normalSet.add(cur);
-      cur = getMonthOffset(cur, 1);
-    }
-  });
-  normalSet.forEach(function(m){ drivingSet.delete(m); });
-  let count6=0, count3=0;
-  normalSet.forEach(function(m){ if (m>=sixYearsAgo && m<=today) count6+=1; if (m>=threeYearsAgo && m<=today) count3+=1; });
-  drivingSet.forEach(function(m){ if (m>=sixYearsAgo && m<=today) count6+=0.5; if (m>=threeYearsAgo && m<=today) count3+=0.5; });
-  let totalMonths6yr = Math.floor(count6), totalMonths3yr = Math.floor(count3);
+  let mm = computeCareerMonths(entries);
+  let totalMonths6yr = mm.t6, totalMonths3yr = mm.t3;
   window._calcTotal6yr = totalMonths6yr;
   window._calcTotal3yr = totalMonths3yr;
+  // 복수 경력 중 일부(최소 조합)만으로 충족되는지 판별 → 서류·표기에 활용
+  let essInfo = findEssentialTypes(entries);
+  state.docExpTypes = essInfo.essential.join(', ');
+  window._redundantTypes = essInfo.redundant;
 
   let latestEnd = '';
   entries.forEach(function(e){ if (!latestEnd || e.end > latestEnd) latestEnd = e.end; });
@@ -1240,6 +1331,10 @@ function runCalc(){
     '<div class="calc-row" style="border-bottom:1.5px solid rgba(255,255,255,.12);margin-bottom:6px;padding-bottom:8px;"><span style="font-weight:900;color:#fff;">총 합산 경력</span><span style="color:#fff;font-size:16px;font-weight:800;">'+totalDisplay+'</span></div>' +
     '<div class="calc-row"><span>3년 내 2년 6개월 기준</span><b class="'+(qualifies30mo?'ok':'fail')+'">'+(qualifies30mo?'경력 충족':'경력 미충족 ('+remain3+'개월 부족)')+'</b></div>' +
     '<div class="calc-row"><span>6년 내 5년 기준</span><b class="'+(qualifies5yr?'ok':'fail')+'">'+(qualifies5yr?'경력 충족':'경력 미충족 ('+remain6+'개월 부족)')+'</b></div>';
+  if (window._redundantTypes && window._redundantTypes.length){
+    let _essBracket = String(state.docExpTypes||'').split(',').map(function(s){return s.trim();}).filter(Boolean).map(function(t){return '['+t+']';}).join(', ');
+    careerHtml += '<div class="calc-row" style="margin-top:6px;border-top:1px solid rgba(255,255,255,.1);padding-top:8px;"><span style="color:var(--gold2);font-weight:700;font-size:12px;line-height:1.55;word-break:keep-all;">✓ '+_essBracket+' 경력만으로 기준을 충족하여, 해당 경력 필요 서류를 안내드립니다.</span></div>';
+  }
   let eduData = [
     {label:'양수교육', value: qualifies ? '면제 대상' : (types.includes('법인택시') && totalMonths3yr>=12 && totalMonths3yr<30) ? '교육 대상(경력자 과정)' : '교육 대상(수료 필요)', cls: qualifies?'ok':'warn'},
     {label:'신규교육', value: needsNewEdu ? '교육 대상(수료 필요)' : '면제 대상', cls: needsNewEdu?'warn':'ok'}
@@ -1304,7 +1399,7 @@ function classifyDiagValue(label, rawValue){
   if (v === '적합') return 'diag-ok';
   if (v === '부적합') return 'diag-fail';
   if (v === '확인 필요') return 'diag-warn';
-  if (label.includes('거주 이력')){ return v === '12개월 이상' ? 'diag-ok' : 'diag-fail'; }
+  if (label.includes('거주 이력') || label.includes('거주 요건')){ if (v.indexOf('미충족')===0) return 'diag-fail'; if (v==='확인 필요') return 'diag-warn'; return v === '12개월 이상' ? 'diag-ok' : 'diag-fail'; }
   if (label.includes('현재') && label.includes('거주 여부')) return '';
   if (label.includes('택시운전자격증')) return '';
   if (label.includes('운전적성정밀검사')){ if (v==='수검') return 'diag-ok'; if (v==='미수검') return 'diag-fail'; return ''; }
@@ -1336,12 +1431,21 @@ function buildDiagnosisRows(){
   let sido = state.regionSido || '서울특별시';
   let isSeoul = sido === '서울특별시';
   let regionName = isSeoul ? '서울시' : '운행희망지역';
-  rows.push([regionName+' 거주 이력', displayValue('거주 이력', state.residenceHistory || '-')]);
+  let resideLabel = isSeoul ? '서울시 1년 거주 요건' : (regionName + ' 거주 이력');
+  let resideRaw = state.residenceHistory || '';
+  let resideVal;
+  if (!resideRaw) resideVal = '-';
+  else if (resideRaw === '6개월 미만' || resideRaw === '6개월 이상 12개월 미만') resideVal = '미충족 (' + resideRaw + ')';
+  else resideVal = displayValue('거주 이력', resideRaw);
+  rows.push([resideLabel, resideVal]);
   rows.push(['현재 '+regionName+' 거주 여부', displayValue('현재 거주 여부', state.currentSeoul || '-')]);
   rows.push([(isSeoul?'서울시':sido)+' 택시운전자격증 취득 여부', displayValue('택시운전자격증', state.taxiCert || '-')]);
   rows.push(['운전적성정밀검사 수검 여부', state.aptitudeTest || '-']);
   let careerDisplay = isExperienced ? (state.commercialExpType || '경력자') : '미경력자';
   rows.push(['영업용 차량/운전직 경력 종류', careerDisplay, false]);
+  if (isExperienced && window._redundantTypes && window._redundantTypes.length && state.docExpTypes){
+    rows.push(['기준 충족 인정 경력', state.docExpTypes + ' 경력만으로 충족', false]);
+  }
   if (isExperienced){
     let t6 = window._calcTotal6yr||0, t3 = window._calcTotal3yr||0;
     let qual5yr = t6>=60, qual30mo = t3>=30;
@@ -1530,7 +1634,8 @@ function docsForType(type, period){
 }
 // 보유한 모든 경력 종류별 필요 서류 목록(배열). 복수 경력이면 각 종류를 모두 반환
 function getExtraDocsList(){
-  let raw = state.commercialExpType || '';
+  // 충족에 꼭 필요한 경력(docExpTypes)이 있으면 그 경력 서류만 안내, 없으면 전체 경력
+  let raw = state.docExpTypes || state.commercialExpType || '';
   let period = state.accidentFreePeriod || '';
   // 미경력자('없음')·미상은 경력별 추가 서류가 없으므로 제외 → 기본 서류만 안내
   let types = raw.split(',').map(function(s){ return s.trim(); })
@@ -1657,17 +1762,9 @@ function buildDocListText(){
   let sec = _sectionsText(getExtraDocsList());
   return sec ? (_basicDocsText() + '\n\n' + sec) : _basicDocsText();
 }
-// 1번(또는 단독) 문자: 인사말 + 서류(docText) + 마무리/연락처
-function _composeMsg1(docText){
+// 문자 하단 공통 마무리/연락처 채널
+function _smsClosing(){
   return [
-    '[개인택시 양수도센터]',
-    '',
-    '안녕하세요, 개인택시 양수도센터입니다.',
-    '',
-    '예비 양수자님께서 작성해주신 내용을 바탕으로 분석한 <양수 자격 진단표>와 <맞춤형 필요 서류 목록>을 보내드립니다.',
-    '',
-    '',
-    docText,
     '',
     '',
     '복잡하고 어렵게 느껴질 수 있는 개인택시 양수 과정, 시작부터 끝까지 원활하게 진행되실 수 있도록 저희 센터가 든든한 파트너가 되어 드리겠습니다.',
@@ -1682,7 +1779,97 @@ function _composeMsg1(docText){
     '▶ 공식 홈페이지: https://tlxc.co.kr/',
     '',
     '▶ 양수도 정보공유 카페: https://cafe.naver.com/taxilab/'
-  ].join('\n');
+  ];
+}
+// 케이스1(미경력+양수교육 미이수): 미충족 요건별 발급처 안내 블록. 양수교육은 항상 포함.
+function _issuerBlocks(){
+  let blocks = [];
+  blocks.push([
+    '▶ 양수교육 이수',
+    '· 기관: 교통안전체험교육센터 (한국교통안전공단)',
+    '· 홈페이지: https://tslms.kotsa.or.kr/main.do',
+    '· 연락처: 화성 031-8053-9800 / 상주 054-530-0100',
+    '· 신청방법: 매년 3·6·9·12월 홈페이지에서 교육 추첨'
+  ].join('\n'));
+  if (state.aptitudeTest === '미수검'){
+    blocks.push([
+      '▶ 운전적성정밀검사 수검',
+      '· 기관: 한국교통안전공단',
+      '· 홈페이지: https://lic.kotsa.or.kr/tsportal/main.do',
+      '· 서울 시험장: 송파 / 노원 / 성산',
+      '· 신청방법: 홈페이지에서 검사 접수'
+    ].join('\n'));
+  }
+  if (state.taxiCert === '아니오'){
+    blocks.push([
+      '▶ 택시운전자격증 취득',
+      '· 기관: 한국교통안전공단',
+      '· 홈페이지: https://lic.kotsa.or.kr/tsportal/main.do',
+      '· 서울 시험장: 송파 / 노원 / 성산 / 구로',
+      '· 신청방법: 홈페이지에서 접수'
+    ].join('\n'));
+  }
+  if (state.newEducation === '미수료'){
+    blocks.push([
+      '▶ 신규교육 이수',
+      '· 기관: 서울특별시교통문화교육원',
+      '· 홈페이지: https://www.stecc.or.kr/',
+      '· 연락처: 02-585-3311',
+      '· 신청방법: 홈페이지에서 교육 접수 (격주 간격 실시)'
+    ].join('\n'));
+  }
+  return blocks;
+}
+// 케이스1 문자: 기본 서류 대신 미충족 요건 발급처 안내
+function _composeCase1(){
+  let head = [
+    '[개인택시 양수 자격 진단 안내]',
+    '',
+    '안녕하세요, 개인택시 양수도센터입니다.',
+    '',
+    '진단 결과, 아직 양수교육을 이수하지 않으셔서 현재는 바로 면허를 양수하기 어렵습니다.',
+    '아래 부족한 요건을 갖추시면 양수를 준비하실 수 있습니다.',
+    '',
+    '<보완이 필요한 요건 안내>',
+    ''
+  ];
+  return head.concat([_issuerBlocks().join('\n\n')]).concat(_smsClosing()).join('\n');
+}
+// 케이스2 문자: 서류 없이 부족 경력 기간만 안내
+function _composeCase2(){
+  let t3 = window._calcTotal3yr || 0, t6 = window._calcTotal6yr || 0;
+  let r3 = 30 - t3, r6 = 60 - t6;
+  let lack, basis;
+  if (r3 <= r6){ lack = r3; basis = '(최근 3년 내 2년 6개월 경력 기준)'; }
+  else { lack = r6; basis = '(최근 6년 내 5년 경력 기준)'; }
+  let head = [
+    '[개인택시 양수 자격 진단 안내]',
+    '',
+    '안녕하세요, 개인택시 양수도센터입니다.',
+    '',
+    '진단 결과, 양수 자격 기준 대비 영업용 경력이 조금 부족합니다.',
+    '',
+    '<부족한 경력 안내>',
+    "· 현재 기준 약 '" + lack + "개월'의 영업용 경력이 더 필요합니다.",
+    '  ' + basis,
+    '',
+    '서류 및 자격요건에 대한 추가 문의는 아래 연락처를 통해 문의주시기 바랍니다.'
+  ];
+  return head.concat(_smsClosing()).join('\n');
+}
+// 일반 문자(1번 또는 단독): 인사말 + 서류(docText) + 마무리/연락처
+function _composeMsg1(docText){
+  let parts = [
+    '[개인택시 양수도센터]',
+    '',
+    '안녕하세요, 개인택시 양수도센터입니다.',
+    '',
+    '예비 양수자님께서 작성해주신 내용을 바탕으로 분석한 <양수 자격 진단표>와 <맞춤형 필요 서류 목록>을 보내드립니다.',
+    '',
+    '',
+    docText
+  ];
+  return parts.concat(_smsClosing()).join('\n');
 }
 // 2번(이어서) 문자: 나머지 서류 목록
 function _composeMsg2(docText){
@@ -1696,6 +1883,16 @@ function _composeMsg2(docText){
 }
 // 발송할 문자 배열 반환. 2000바이트 초과 시 두 통으로 분할(첫 경력 서류 + 나머지)
 function buildSmsMessages(){
+  // 케이스1: 미경력 + 양수교육 미이수(미당첨/모름) → 기본 서류 제외, 미충족 요건 발급처 안내
+  if (state.commercialExp !== '예' && (state.transferEducation === '미당첨' || state.transferEducation === '모름')){
+    return [_composeCase1()];
+  }
+  // 케이스2: 경력자 + 경력 부족(3년·6년 기준 모두 미달) → 서류 제외, 부족 경력 안내만
+  let _t3 = window._calcTotal3yr || 0, _t6 = window._calcTotal6yr || 0;
+  if (state.commercialExp === '예' && _t3 < 30 && _t6 < 60){
+    return [_composeCase2()];
+  }
+  // 일반: 기본 서류 + 경력별 서류 (2000바이트 초과 시 2통 분할)
   let extras = getExtraDocsList();
   let allDoc = _basicDocsText() + (extras.length ? '\n\n' + _sectionsText(extras) : '');
   let full = _composeMsg1(allDoc);
@@ -1725,7 +1922,7 @@ async function submitForm(){
   let phone = phoneInput.value.trim().replace(/-/g,'');
   if (phone && !phone.startsWith('0')) phone = '0'+phone;
   if (!name || !phone){ alert('이름과 연락처를 모두 입력해 주세요.'); return; }
-  if (!/^01[0-9]-?\d{3,4}-?\d{4}$/.test(phone)){ alert('연락처 형식이 올바르지 않습니다. 예: 010-1234-5678'); return; }
+  if (!/^01[0-9]-?\d{4}-?\d{4}$/.test(phone)){ alert('연락처 형식이 올바르지 않습니다. 예: 010-1234-5678'); return; }
   if (agree && !agree.checked){ alert('개인정보 수집·이용에 동의해 주세요.'); return; }
 
   let isEligible = isFullyEligible();
@@ -1791,7 +1988,10 @@ async function submitForm(){
     fetch(GAS_WEB_APP_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload) })
       .catch(function(err){ console.error('[DB전송] 실패', err); });
     alert('발송 신청이 완료되었습니다.\n입력하신 연락처로 맞춤 진단표와 필요 서류 목록을 곧 문자로 발송해드립니다.');
-    nameInput.value=''; phoneInput.value=''; if (agree) agree.checked=false; submitBtn.disabled=true;
+    nameInput.value=''; phoneInput.value=''; if (agree) agree.checked=false;
+    var _mkt=document.getElementById('agreeMkt'); if(_mkt) _mkt.checked=false;
+    var _all=document.getElementById('agreeAll'); if(_all) _all.checked=false;
+    submitBtn.disabled=true;
   } catch(e){
     alert('저장 중 문제가 발생했습니다. 다시 시도해 주세요.');
     console.error(e);
