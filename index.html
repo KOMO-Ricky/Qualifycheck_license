@@ -625,11 +625,10 @@ img{max-width:100%;}
         <div style="font-size:52px;line-height:1;margin:10px 0 2px;">✅</div>
         <h2 class="q-title" style="margin-top:8px;">문자 발송 신청이<br>완료되었습니다</h2>
         <p class="q-sub" style="text-align:center;">입력하신 연락처로 맞춤 진단표와 안내를 곧 문자로 보내드립니다.<br>잠시만 기다려 주세요.</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:28px;">
+        <div style="display:grid;grid-template-columns:1fr;gap:10px;margin-top:28px;">
+          <button type="button" onclick="window.open('https://nick-sbkim.github.io/eventportal/','_blank')" style="padding:15px 12px;border-radius:12px;border:none;background:linear-gradient(135deg,#1B2735,#10161F);color:#F4E9CE;font-size:14px;font-weight:800;cursor:pointer;">양수 절차 안내 통합포털 이동</button>
+          <button type="button" onclick="window.open('https://tlxc.co.kr/','_blank')" style="padding:15px 12px;border-radius:12px;border:none;background:linear-gradient(135deg,#C9A86A,#E8CE9A);color:#12171F;font-size:14px;font-weight:800;cursor:pointer;">양수도센터 홈페이지 이동</button>
           <button type="button" onclick="location.reload()" style="padding:15px 12px;border-radius:12px;border:1px solid rgba(0,0,0,.14);background:#fff;color:#1B2430;font-size:14px;font-weight:800;cursor:pointer;">처음으로</button>
-          <button type="button" onclick="endingClose()" style="padding:15px 12px;border-radius:12px;border:1px solid rgba(0,0,0,.14);background:#fff;color:#1B2430;font-size:14px;font-weight:800;cursor:pointer;">닫기</button>
-          <button type="button" onclick="window.open('https://tlxc.co.kr/','_blank')" style="padding:15px 12px;border-radius:12px;border:none;background:linear-gradient(135deg,#C9A86A,#E8CE9A);color:#12171F;font-size:14px;font-weight:800;cursor:pointer;">홈페이지 이동</button>
-          <button type="button" onclick="window.open('https://nick-sbkim.github.io/eventportal/','_blank')" style="padding:15px 12px;border-radius:12px;border:none;background:linear-gradient(135deg,#1B2735,#10161F);color:#F4E9CE;font-size:14px;font-weight:800;cursor:pointer;">통합포털 이동</button>
         </div>
       </div>
     </div>
@@ -793,13 +792,6 @@ function goBack(){
 }
 
 const NO_BOTBAR = ['s0','s0b','s5ACalc','s8B1','s9B','sEnd'];
-function endingClose(){
-  // 스크립트로 연 창이 아니면 브라우저가 close를 막을 수 있음 → 시도 후 실패 시 안내
-  try { window.open('', '_self'); window.close(); } catch(e){}
-  setTimeout(function(){
-    showModal({ title:'안내', message:'브라우저 정책상 이 창은 자동으로 닫히지 않을 수 있습니다.\n창이 그대로라면 브라우저의 닫기(X) 버튼으로 닫아 주세요.', buttons:[{text:'확인', className:'btn-primary'}] });
-  }, 400);
-}
 function updateBotBar(id){
   if (NO_BOTBAR.includes(id)) return;
   let nextBtn = document.getElementById(id+'-next');
@@ -1844,12 +1836,12 @@ function _docListText(){
   let extras = getExtraDocsList();
   return _basicDocsText() + (extras.length ? '\n\n' + _sectionsText(extras) : '');
 }
-// 2번(이어서) 문자: 나머지 서류 목록
+// 2번(이어서) 문자: 필요 서류 목록
 function _composeMsg2(docText){
   return [
     '[개인택시 양수 자격 진단 결과 안내]',
     '',
-    '(이어서) 추가로 준비하셔야 할 서류입니다.',
+    '(이어서) 준비하셔야 할 필요 서류 목록입니다.',
     '',
     docText
   ].join('\n');
@@ -1865,41 +1857,37 @@ function buildSmsMessages(nm){
   let docText = _docListText();
   let head = ['', ''].concat([_greetLine(nm), '개인택시 양수도센터입니다.']);
 
+  // 서류 목록은 문자 길이 초과(잘림) 방지를 위해 항상 2번째 문자로 분리해 발송한다.
+  let msg1;
   if (eligible){
-    // [충족자] 인삿말 → 서류목록(기존 위치) → 통합포털 → 상담채널
+    // [충족자] 인삿말 → 안내문 → 통합포털 → 상담채널 (서류는 2번 문자)
     let parts = ['[개인택시 양수 자격 진단 결과 안내]'].concat(head).concat([
       '',
-      '예비 양수자님께서 작성해주신 내용을 바탕으로 분석한 <양수 자격 진단표>와 <맞춤형 필요 서류 목록>을 보내드립니다.'
+      '예비 양수자님께서 작성해주신 내용을 바탕으로 분석한 <양수 자격 진단표>를 보내드립니다.',
+      '(맞춤형 필요 서류 목록은 이어지는 다음 문자로 보내드립니다.)'
     ]);
-    let full = parts.concat(['', '', docText, '', '', _portalBlock()]).concat(_smsClosing()).join('\n');
-    if (_smsByteLen(full) <= 2000) return [full];
-    // 초과 → 서류목록을 2번 문자로
-    let msg1 = parts.concat(['', '', _portalBlock()]).concat(_smsClosing()).join('\n');
-    return [msg1, _composeMsg2(docText)];
-  }
-
-  // [불충분자] 인삿말 → (부족경력) → (통합포털) → 상담채널 → 맨 아래 서류목록
-  let guide = [];
-  if (case2){
-    guide.push('진단 결과, 양수 자격 기준 대비 영업용 경력이 조금 부족합니다.');
-    guide.push('');
-    guide.push(_careerShortText());
-  } else if (case1){
-    guide.push('진단 결과, 아직 양수교육을 이수하지 않으셔서 현재는 바로 면허를 양수하기 어렵습니다.');
-    guide.push('아래 안내를 참고해 부족한 요건을 준비해 주세요.');
+    msg1 = parts.concat(['', '', _portalBlock()]).concat(_smsClosing()).join('\n');
   } else {
-    guide.push('진단 결과, 양수를 위해 몇 가지 요건을 더 준비하셔야 합니다.');
-    guide.push('아래 안내를 참고해 주세요.');
+    // [불충분자] 인삿말 → (부족경력) → (통합포털) → 상담채널 (서류는 2번 문자)
+    let guide = [];
+    if (case2){
+      guide.push('진단 결과, 양수 자격 기준 대비 영업용 경력이 조금 부족합니다.');
+      guide.push('');
+      guide.push(_careerShortText());
+    } else if (case1){
+      guide.push('진단 결과, 아직 양수교육을 이수하지 않으셔서 현재는 바로 면허를 양수하기 어렵습니다.');
+      guide.push('아래 안내를 참고해 부족한 요건을 준비해 주세요.');
+    } else {
+      guide.push('진단 결과, 양수를 위해 몇 가지 요건을 더 준비하셔야 합니다.');
+      guide.push('아래 안내를 참고해 주세요.');
+    }
+    if (_portalNeed()){ guide.push(''); guide.push(_portalBlock()); }
+    guide.push('');
+    guide.push('서류 및 자격요건에 대한 추가 문의는 아래 연락처를 통해 문의주시기 바랍니다.');
+    guide.push('(필요 서류 목록은 이어지는 다음 문자로 보내드립니다.)');
+    let core = ['[개인택시 양수 자격 진단 결과 안내]'].concat(head).concat(['']).concat(guide);
+    msg1 = core.concat(_smsClosing()).join('\n');
   }
-  if (_portalNeed()){ guide.push(''); guide.push(_portalBlock()); }
-  guide.push('');
-  guide.push('서류 및 자격요건에 대한 추가 문의는 아래 연락처를 통해 문의주시기 바랍니다.');
-
-  let core = ['[개인택시 양수 자격 진단 결과 안내]'].concat(head).concat(['']).concat(guide);
-  let full = core.concat(_smsClosing()).concat(['', '', docText]).join('\n');
-  if (_smsByteLen(full) <= 2000) return [full];
-  // 초과 → 서류목록을 2번 문자로
-  let msg1 = core.concat(_smsClosing()).join('\n');
   return [msg1, _composeMsg2(docText)];
 }
 // (하위 호환) 첫 번째 문자만
