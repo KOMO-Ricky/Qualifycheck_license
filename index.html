@@ -136,11 +136,16 @@ img{max-width:100%;}
 .opt-head{display:flex;align-items:center;justify-content:space-between;}
 .opt-check{color:var(--gold);font-size:15px;font-weight:800;opacity:0;}
 .opt.selected .opt-check{opacity:1;}
-.opt-label{font-size:14.5px;font-weight:800;color:var(--ink);line-height:1.35;letter-spacing:-.2px;}
+.opt-label{font-size:14.5px;font-weight:800;color:var(--ink);line-height:1.35;letter-spacing:-.2px;word-break:keep-all;overflow-wrap:break-word;}
 .opt-badge{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;flex:none;background:#F0E7D4;color:#8C7038;transition:all .24s;}
 .calc{margin-top:20px;}
 .calc-box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:11px;margin-bottom:10px;}
 .calc-box select,.calc-box input{border:1.5px solid #DAD3C4;border-radius:7px;padding:11px;font-size:13px;background:#fff;color:var(--ink);outline:none;width:100%;min-width:0;}
+.calc-box input[type="month"]{font-size:15px;}
+/* 엔딩 페이지: 버튼 3종을 안내 문구와 하단(푸터) 사이 남는 공간의 세로 중앙에 배치 */
+#scr-sEnd .panel-inner{min-height:100%;display:flex;flex-direction:column;box-sizing:border-box;}
+#scr-sEnd .panel-body{flex:1;display:flex;flex-direction:column;}
+#scr-sEnd .end-btns-wrap{flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px 0;}
 .calc-row-num-row{display:flex;align-items:center;justify-content:space-between;}
 .calc-row-num{font-size:11px;font-weight:800;color:#8C7038;letter-spacing:.3px;}
 .calc-row-del{background:none;border:1.5px solid var(--line);border-radius:6px;cursor:pointer;font-size:11px;font-weight:800;color:var(--muted);padding:5px 10px;}
@@ -149,8 +154,8 @@ img{max-width:100%;}
 .calc-date-label{font-size:10.5px;font-weight:700;color:var(--muted);margin-bottom:5px;}
 .calc-ongoing{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--muted);cursor:pointer;margin-top:6px;align-self:flex-end;}
 .calc-ongoing input[type=checkbox]{width:auto;flex:none;padding:0;min-width:auto;}
-.calc-add-top{border:1.5px solid var(--gold);background:transparent;color:#8C7038;border-radius:6px;padding:5px 11px;font-weight:800;font-size:11.5px;cursor:pointer;transition:background .15s;}
-.calc-add-top:hover{background:#FBF7EE;}
+.calc-add-top{border:1.5px solid #A8853F;background:linear-gradient(135deg,#C9A86A,#B8935A);color:#12171F;border-radius:6px;padding:5px 11px;font-weight:800;font-size:11.5px;cursor:pointer;transition:filter .15s;}
+.calc-add-top:hover{filter:brightness(1.08);}
 .calc-add-top:disabled{opacity:.4;cursor:not-allowed;}
 .calc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
 .calc-overlap-warn{font-size:11.5px;font-weight:700;color:#B5564A;margin-top:6px;display:none;padding:6px 10px;background:#F4E3E0;border-radius:6px;}
@@ -330,6 +335,7 @@ img{max-width:100%;}
   .footer-band .fb-links a i{width:clamp(13px,3.5vw,16px);height:clamp(13px,3.5vw,16px);font-size:clamp(8px,2.2vw,9.5px);}
   .calc-dates>div{min-width:0;}
   .calc-box input,.calc-box select{font-size:12px;padding:9px 8px;}
+  .calc-box input[type="month"]{font-size:14px;}
   .q-sub{font-size:12.5px;}
 }
 @keyframes coverIn{from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:translateY(0);}}
@@ -431,9 +437,9 @@ img{max-width:100%;}
       <div class="panel-top"><button type="button" class="btn-back" onclick="goBack()">← 이전</button><div class="chip-wrap"><span class="chip" id="s1-chip">STEP 1 · 서울시 거주 이력</span></div></div>
       <div class="panel-body">
 <h2 class="q-title" id="s1-title">서울시 거주 이력은<br>어느 정도이신가요?</h2><p class="q-sub" id="s1-sub">서류 접수일 기준 태어난 이후로 도합 12개월 이상의 서울시 거주 이력이 필요합니다. (주민등록초본 기준)</p><div class="sample"><button type="button" class="sample-btn" onclick="showSampleImg('주민등록초본')">📄 주민등록초본 샘플 이미지 보기</button><div class="sample-issuer">📍 발급처: 가까운 동사무소 및 구청 / 온라인 정부24</div></div><div class="opts" id="s1-opts">
-        <button type="button" class="opt" onclick="handleResidenceHistory('6개월 미만',this)"><div class="opt-head"><span class="opt-badge">1</span><span class="opt-check">✓</span></div><span class="opt-label">6개월 미만</span></button>
+        <button type="button" class="opt" onclick="handleResidenceHistory('12개월 이상',this)"><div class="opt-head"><span class="opt-badge">1</span><span class="opt-check">✓</span></div><span class="opt-label">12개월 이상</span></button>
         <button type="button" class="opt" onclick="handleResidenceHistory('6개월 이상 12개월 미만',this)"><div class="opt-head"><span class="opt-badge">2</span><span class="opt-check">✓</span></div><span class="opt-label">6개월 이상 12개월 미만</span></button>
-        <button type="button" class="opt" onclick="handleResidenceHistory('12개월 이상',this)"><div class="opt-head"><span class="opt-badge">3</span><span class="opt-check">✓</span></div><span class="opt-label">12개월 이상</span></button>
+        <button type="button" class="opt" onclick="handleResidenceHistory('6개월 미만',this)"><div class="opt-head"><span class="opt-badge">3</span><span class="opt-check">✓</span></div><span class="opt-label">6개월 미만</span></button>
         <button type="button" class="opt" onclick="handleResidenceHistory('잘 모르겠음',this)"><div class="opt-head"><span class="opt-badge">4</span><span class="opt-check">✓</span></div><span class="opt-label">잘 모르겠음</span></button>
       </div>
       </div>
@@ -531,7 +537,7 @@ img{max-width:100%;}
     <div class="panel-inner">
       <div class="panel-top"><button type="button" class="btn-back" onclick="goBack()">← 이전</button><div class="chip-wrap"><span class="chip">STEP 6 · 경력 계산기</span></div></div>
       <div class="panel-body">
-<h2 class="q-title">보유하신 운전 관련 경력을<br>입력해 주세요 (무사고 기간)</h2><div class="calc">
+<h2 class="q-title">보유하신 영업용/운전직 차량 관련<br>경력을 입력해 주세요 (무사고 기간)</h2><p class="q-sub">본 계산기는 예비양수자의 영업용/운전직 경력 충족 여부를 확인하는 단계입니다.</p><div class="calc">
       <div class="calc-header"><span></span><button type="button" class="calc-add-top" id="calcAddBtn" disabled onclick="addCalcRow()">＋ 경력 추가</button></div>
       <div id="calcRows"></div>
       <div class="calc-result" id="calcResultBox">
@@ -556,7 +562,7 @@ img{max-width:100%;}
     <div class="panel-inner">
       <div class="panel-top"><button type="button" class="btn-back" onclick="goBack()">← 이전</button><div class="chip-wrap"><span class="chip">STEP 6 · 사고 이력 확인</span></div></div>
       <div class="panel-body">
-<h2 class="q-title">최근 5년 내 사람이 다친<br>사고 이력이 있나요?</h2><p class="q-sub">경찰서에서 발급되는 운전경력증명서를 통해 확인하실 수 있으며, 서류 접수일 기준 최근 5년을 기준으로 합니다.</p><div class="sample"><button type="button" class="sample-btn" onclick="showSampleImg('운전경력증명서')">📄 운전경력증명서 샘플 이미지 보기</button><div class="sample-issuer">📍 발급처: 경찰서 민원실 / 온라인 정부24</div></div><div class="opts">
+<h2 class="q-title">최근 5년 내 사람이 다친<br>사고 이력은 없나요?</h2><p class="q-sub">경찰서에서 발급되는 운전경력증명서를 통해 확인하실 수 있으며, 서류 접수일 기준 최근 5년을 기준으로 합니다.</p><div class="sample"><button type="button" class="sample-btn" onclick="showSampleImg('운전경력증명서')">📄 운전경력증명서 샘플 이미지 보기</button><div class="sample-issuer">📍 발급처: 경찰서 민원실 / 온라인 정부24</div></div><div class="opts">
         <button type="button" class="opt" onclick="handleAccidentHistory('예',this)"><div class="opt-head"><span class="opt-badge">1</span><span class="opt-check">✓</span></div><span class="opt-label">예</span></button>
         <button type="button" class="opt" onclick="handleAccidentHistory('아니오',this)"><div class="opt-head"><span class="opt-badge">2</span><span class="opt-check">✓</span></div><span class="opt-label">아니오</span></button>
         <button type="button" class="opt" onclick="handleAccidentHistory('잘 모르겠음',this)"><div class="opt-head"><span class="opt-badge">3</span><span class="opt-check">✓</span></div><span class="opt-label">잘 모르겠음</span></button>
@@ -622,13 +628,15 @@ img{max-width:100%;}
   <section class="screen panel" id="scr-sEnd" data-stage="8" data-rail="완료" data-chip="신청 완료">
     <div class="panel-inner">
       <div class="panel-body" style="text-align:center;">
-        <div style="font-size:52px;line-height:1;margin:10px 0 2px;">✅</div>
-        <h2 class="q-title" style="margin-top:8px;">문자 발송 신청이<br>완료되었습니다</h2>
-        <p class="q-sub" style="text-align:center;">입력하신 연락처로 맞춤 진단표와 안내를 곧 문자로 보내드립니다.<br>잠시만 기다려 주세요.</p>
-        <div style="display:grid;grid-template-columns:1fr;gap:10px;margin-top:28px;">
-          <button type="button" onclick="window.open('https://nick-sbkim.github.io/eventportal/','_blank')" style="padding:15px 12px;border-radius:12px;border:none;background:linear-gradient(135deg,#1B2735,#10161F);color:#F4E9CE;font-size:14px;font-weight:800;cursor:pointer;">양수 절차 안내 통합포털 이동</button>
-          <button type="button" onclick="window.open('https://tlxc.co.kr/','_blank')" style="padding:15px 12px;border-radius:12px;border:none;background:linear-gradient(135deg,#C9A86A,#E8CE9A);color:#12171F;font-size:14px;font-weight:800;cursor:pointer;">양수도센터 홈페이지 이동</button>
-          <button type="button" onclick="location.reload()" style="padding:15px 12px;border-radius:12px;border:1px solid rgba(0,0,0,.14);background:#fff;color:#1B2430;font-size:14px;font-weight:800;cursor:pointer;">처음으로</button>
+        <div style="font-size:52px;line-height:1;margin:10px 0 2px;">✉️</div>
+        <h2 class="q-title" style="margin-top:8px;">문자가<br>발송되었습니다</h2>
+        <p class="q-sub" style="text-align:center;">입력하신 연락처로 양수 진단표와 맞춤 서류 목록을 발송해드렸습니다.<br>전송에는 약간의 시간이 소요될 수 있습니다.</p>
+        <div class="end-btns-wrap">
+        <div style="display:grid;grid-template-columns:1fr;gap:10px;">
+          <button type="button" onclick="window.open('https://nick-sbkim.github.io/eventportal/','_blank')" style="height:54px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;padding:0 12px;border-radius:12px;border:none;background:linear-gradient(135deg,#1B2735,#10161F);color:#F4E9CE;font-size:14px;font-weight:800;cursor:pointer;">양수 준비 통합신청 포털 이동</button>
+          <button type="button" onclick="window.open('https://tlxc.co.kr/','_blank')" style="height:54px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;padding:0 12px;border-radius:12px;border:none;background:linear-gradient(135deg,#C9A86A,#E8CE9A);color:#12171F;font-size:14px;font-weight:800;cursor:pointer;">개인택시 양수도센터 홈페이지 이동</button>
+          <button type="button" onclick="location.reload()" style="height:54px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;padding:0 12px;border-radius:12px;border:1px solid rgba(0,0,0,.14);background:#fff;color:#1B2430;font-size:14px;font-weight:800;cursor:pointer;">처음으로</button>
+        </div>
         </div>
       </div>
     </div>
@@ -726,6 +734,13 @@ function go(id, pushStack){
   let cur = document.querySelector('.screen.active');
   let curId = cur ? cur.id.replace('scr-','') : '';
   if (pushStack === false && curId && _SCREEN_STATES[curId]) _SCREEN_STATES[curId]();
+  // 뒤로가기로 떠나는 화면도 선택 표시·다음 버튼을 초기화 (남겨두면 재진입 시
+  // 선택은 보이는데 다음 버튼은 비활성인 모순 상태가 됨)
+  if (pushStack === false && cur){
+    cur.querySelectorAll('.opt.selected').forEach(function(b){ b.classList.remove('selected'); });
+    let curNb = document.getElementById(curId+'-next') || cur.querySelector('.btn-next');
+    if (curNb) curNb.disabled = true;
+  }
   if (cur) cur.classList.remove('active');
   let next = document.getElementById('scr-'+id);
   if (!next) return;
@@ -1052,8 +1067,9 @@ function handleCommercialExp(value, btn){
   }
 }
 function handleAccidentHistory(value, btn){
-  state.accidentFreePeriod = value === '예' ? '최근 5년 내 사고 이력 있음' : (value === '아니오' ? '최근 5년 내 사고 이력 없음' : '최근 5년 내 사고 이력 잘 모르겠음');
-  if (value === '예' || value === '잘 모르겠음'){
+  // 질문이 "사고 이력은 없나요?"이므로 예 = 무사고(이력 없음), 아니오 = 이력 있음
+  state.accidentFreePeriod = value === '예' ? '최근 5년 내 사고 이력 없음' : (value === '아니오' ? '최근 5년 내 사고 이력 있음' : '최근 5년 내 사고 이력 잘 모르겠음');
+  if (value === '아니오' || value === '잘 모르겠음'){
     setPending(btn, function(){ go('s7B1'); });
     showModal({
       title:'안내',
