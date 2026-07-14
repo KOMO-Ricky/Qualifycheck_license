@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>개인택시 양수 자격 진단 — 도시에(데모) 디자인 소스</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@2.0/nanumsquare.css" rel="stylesheet">
+<style>
+
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{margin:0;padding:0;}
+body{font-family:'NanumSquare','Noto Sans KR',sans-serif;background:#ECE7DC;color:#1C2129;}
+button,input{font-family:inherit;}
+input::placeholder{color:#A7AcB6;}
+a{text-decoration:none;}
+.screen{display:none;}
+.screen.active{display:block;}
+/* ───────── COVER ───────── */
+.cover{min-height:100vh;background:radial-gradient(115% 70% at 82% 8%,#1B2735 0%,#10161F 48%,#0A0E14 100%);color:#fff;position:relative;overflow:hidden;}
+.cover.active{display:flex;flex-direction:column;animation:coverIn .65s cubic-bezier(.16,1,.3,1);}
+.cover-ring1{position:absolute;top:-120px;right:-100px;width:420px;height:420px;border-radius:50%;border:1px solid rgba(201,168,106,.18);}
+.cover-glow{position:absolute;top:-40px;right:30px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,106,.22),transparent 68%);animation:glowFloat 8s ease-in-out infinite;pointer-events:none;}
+.cover-vtext{position:absolute;right:26px;top:42%;transform:rotate(90deg);transform-origin:right;font-size:12px;letter-spacing:8px;color:rgba(255,255,255,.07);font-weight:800;}
+.cover-inner{position:relative;max-width:640px;width:100%;margin:0 auto;padding:34px clamp(28px,5vw,56px) 44px;flex:1;display:flex;flex-direction:column;}
+.cover-top{display:flex;align-items:center;justify-content:space-between;}
+.cover-brand{display:flex;align-items:center;gap:11px;}
+.cover-logo{width:30px;height:30px;border:1px solid rgba(201,168,106,.6);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#C9A86A;}
+.cover-bname{font-size:12px;font-weight:800;letter-spacing:1px;color:rgba(231,225,212,.78);}
+.cover-tel{font-size:11px;color:rgba(231,225,212,.45);letter-spacing:.5px;}
+.cover-mid{flex:1;display:flex;flex-direction:column;justify-content:center;padding:46px 0;}
+.cover-eyebrow{font-size:11.5px;font-weight:800;letter-spacing:4px;color:#C9A86A;}
+.cover-head{display:flex;gap:18px;margin-top:20px;}
+.cover-rule{flex:none;width:3px;border-radius:2px;background:linear-gradient(#C9A86A,rgba(201,168,106,0));}
+.cover-head h1{font-size:clamp(34px,8vw,52px);font-weight:800;line-height:1.16;letter-spacing:-1.2px;color:#fff;}
+.cover-lead{font-size:clamp(15px,3.6vw,17px);font-weight:800;color:#E7E1D4;margin-top:22px;}
+.cover-lead span{font-weight:700;color:rgba(231,225,212,.55);font-size:.85em;}
+.cover-desc{font-size:clamp(13px,3.3vw,14.5px);color:rgba(231,225,212,.6);line-height:1.8;margin:14px 0 0;max-width:430px;}
+.cover-stats{display:flex;gap:14px;margin-top:38px;flex-wrap:wrap;}
+.cover-stat{display:flex;align-items:baseline;gap:9px;padding:14px 20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:9px;}
+.cover-stat b{font-size:22px;font-weight:800;color:#C9A86A;}
+.cover-stat span{font-size:12px;color:rgba(231,225,212,.62);font-weight:700;}
+.cover-cta{position:relative;width:100%;border:none;border-radius:9px;padding:21px;background:linear-gradient(180deg,#E6CE82,#C9A86A);color:#12171F;font-weight:800;font-size:17px;letter-spacing:.4px;cursor:pointer;overflow:hidden;box-shadow:0 20px 38px -16px rgba(201,168,106,.8);transition:transform .18s,box-shadow .25s;}
+.cover-cta:hover{transform:translateY(-2px);box-shadow:0 26px 44px -16px rgba(201,168,106,.95);}
+.cover-cta:active{transform:scale(.985);}
+.cover-cta::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(120deg,transparent 35%,rgba(255,255,255,.55) 50%,transparent 65%);transform:translateX(-130%);animation:shimmer 3.8s ease-in-out infinite;pointer-events:none;}
+.cover-foot{text-align:center;margin-top:16px;font-size:11px;color:rgba(231,225,212,.4);}
+/* ───────── WORKSPACE ───────── */
+.ws{min-height:100vh;}
+.ws.active{display:flex;flex-direction:column;background:#ECE7DC;animation:coverIn .5s cubic-bezier(.16,1,.3,1);}
+.ws-shell{display:flex;flex:1;}
+.rail{flex:none;width:340px;align-self:stretch;background:linear-gradient(172deg,#161D27,#0A0E14);color:#fff;padding:34px 30px;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;}
+.rail-brand{display:flex;align-items:center;gap:11px;}
+.rail-logo{width:30px;height:30px;border:1px solid rgba(201,168,106,.6);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#C9A86A;}
+.rail-name{font-size:12px;font-weight:800;letter-spacing:.5px;color:rgba(231,225,212,.82);}
+.rail-full{flex:1;display:flex;flex-direction:column;}
+.ringwrap{display:flex;flex-direction:column;align-items:center;margin:38px 0 30px;}
+.ring{position:relative;width:118px;height:118px;}
+.ring-arc{transition:stroke-dashoffset .7s cubic-bezier(.16,1,.3,1);}
+.ringnum{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.ringnum b{font-size:30px;font-weight:800;color:#fff;line-height:1;}
+.ringnum span{font-size:11px;font-weight:700;color:rgba(231,225,212,.45);margin-top:2px;}
+.rail-step{font-size:11px;font-weight:800;letter-spacing:2px;color:#C9A86A;margin-top:16px;}
+.ledger-title{font-size:10.5px;font-weight:800;letter-spacing:1.5px;color:rgba(231,225,212,.4);margin-bottom:13px;}
+.ledger{display:flex;flex-direction:column;gap:2px;}
+.ledger-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07);animation:ledgerIn .45s cubic-bezier(.16,1,.3,1) both;}
+.ledger-row span{font-size:11.5px;color:rgba(231,225,212,.52);}
+.ledger-row b{font-size:12px;font-weight:800;text-align:right;}
+.rail-foot{margin-top:auto;padding-top:24px;border-top:1px solid rgba(255,255,255,.08);}
+.rail-foot-name{font-size:14px;font-weight:800;letter-spacing:-.2px;color:#fff;}
+.rail-foot-desc{font-size:11px;color:rgba(231,225,212,.55);line-height:1.7;margin:9px 0 0;}
+.rail-foot-desc strong{color:rgba(255,255,255,.92);font-weight:800;}
+.rail-links{display:flex;flex-direction:column;gap:6px;margin-top:14px;}
+.rail-links a{display:flex;align-items:center;gap:7px;padding:9px 11px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:#E7E1D4;font-size:11px;font-weight:800;}
+.rail-links a i{flex:none;width:16px;height:16px;border-radius:4px;background:#C9A86A;color:#12171F;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;font-style:normal;}
+.rail-copy{font-size:10px;color:rgba(231,225,212,.32);letter-spacing:.3px;margin-top:14px;}
+.rail-mini{display:none;}
+.ws-main{flex:1;background:#ECE7DC;padding:clamp(40px,5vw,64px) clamp(28px,4vw,48px) 48px;min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+.ws-container{display:flex;flex-direction:column;flex:1;width:100%;max-width:540px;margin:0 auto;animation:qIn .45s cubic-bezier(.16,1,.3,1);}
+.chip-wrap{display:inline-flex;}
+.chip{display:inline-flex;align-items:center;gap:9px;background:#F4ECD9;border:1px solid #E6D6AC;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:800;color:#8C7038;letter-spacing:.3px;}
+.q-title{margin:18px 0 0;font-size:clamp(23px,5.6vw,30px);font-weight:800;line-height:1.34;letter-spacing:-.6px;color:#1C2129;}
+.q-sub{font-size:13px;color:#6B7079;line-height:1.7;margin:14px 0 0;max-width:460px;}
+.sample-btn{display:inline-flex;align-self:flex-start;align-items:center;gap:7px;margin-top:16px;padding:11px 15px;background:#FBF7EE;border:1px solid #E6D6AC;border-radius:7px;font-size:12px;font-weight:800;color:#8C7038;cursor:pointer;}
+.sample-btn:hover{background:#F6EEDD;}
+.sample-btn:active{transform:scale(.99);}
+.opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:24px;}
+.opt{display:flex;flex-direction:column;justify-content:space-between;gap:14px;min-height:98px;width:100%;text-align:left;cursor:pointer;border-radius:9px;padding:16px;transition:all .24s cubic-bezier(.16,1,.3,1);background:#FBF9F4;border:1.5px solid #E4DECF;box-shadow:0 2px 6px rgba(20,26,34,.05);}
+.opt:active{transform:scale(.98);}
+.opt-head{display:flex;align-items:center;justify-content:space-between;}
+.opt-badge{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;transition:all .24s;background:#F0E7D4;color:#8C7038;}
+.opt-check{color:#C9A86A;font-size:15px;font-weight:800;opacity:0;}
+.opt-label{font-size:15px;font-weight:800;letter-spacing:-.2px;line-height:1.35;color:#1C2129;}
+.opt.selected{background:linear-gradient(155deg,#1B232E,#10161F);border:1.5px solid #34404F;box-shadow:0 20px 32px -16px rgba(8,14,22,.5);transform:translateY(-2px);}
+.opt.selected .opt-badge{background:#C9A86A;color:#12171F;}
+.opt.selected .opt-label{color:#F3EFE6;}
+.opt.selected .opt-check{opacity:1;}
+.nav-wrap{display:flex;gap:11px;margin-top:auto;padding-top:40px;padding-bottom:6px;}
+.btn-prev{flex:none;border:1.5px solid #DAD3C4;background:#FBF9F4;border-radius:8px;padding:17px 22px;font-weight:800;font-size:14.5px;color:#6B7079;cursor:pointer;transition:all .2s;}
+.btn-prev:hover{border-color:#1C2129;color:#1C2129;}
+.btn-prev:active{transform:scale(.98);}
+.btn-next{flex:1;border:none;border-radius:8px;padding:17px;font-weight:800;font-size:15px;transition:all .25s;background:linear-gradient(180deg,#E6CE82,#C9A86A);color:#12171F;cursor:pointer;box-shadow:0 16px 28px -14px rgba(201,168,106,.78);}
+.btn-next:active{transform:scale(.985);}
+.btn-next:disabled{background:#DED7C8;color:#A39C8C;cursor:not-allowed;box-shadow:none;}
+/* footer band */
+.ws-footer,.result-footer{background:linear-gradient(168deg,#161D27,#0A0E14);color:#fff;padding:38px clamp(22px,5vw,48px) 30px;}
+.ws-footer{display:none;}
+.fb-inner{max-width:560px;margin:0 auto;}
+.fb-name{font-size:17px;font-weight:800;letter-spacing:-.2px;}
+.fb-desc{font-size:12.5px;color:rgba(231,225,212,.6);line-height:1.78;margin:11px 0 0;}
+.fb-desc strong{color:#fff;font-weight:800;}
+.fb-links{display:flex;flex-wrap:wrap;gap:7px;margin-top:16px;}
+.fb-links a{display:flex;align-items:center;gap:6px;padding:8px 11px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:#E7E1D4;font-size:11px;font-weight:800;}
+.fb-links a i{width:16px;height:16px;border-radius:4px;background:#C9A86A;color:#12171F;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;font-style:normal;}
+.fb-divider{height:1px;background:rgba(255,255,255,.1);margin:22px 0 15px;}
+.fb-copy{display:flex;flex-direction:column;gap:4px;}
+.fb-c1{font-size:12px;font-weight:800;color:rgba(231,225,212,.82);}
+.fb-c2{font-size:11px;color:rgba(231,225,212,.48);}
+.fb-c3{font-size:10.5px;color:rgba(231,225,212,.36);letter-spacing:.3px;}
+/* ───────── RESULT ───────── */
+.result.active{display:flex;flex-direction:column;min-height:100vh;background:#ECE7DC;animation:coverIn .55s cubic-bezier(.16,1,.3,1);}
+.result-body{flex:1;padding:clamp(28px,5vw,52px) clamp(20px,5vw,40px) 56px;}
+.result-wrap{max-width:560px;margin:0 auto;}
+.result-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+.btn-back{background:none;border:none;color:#6B7079;font-size:13px;font-weight:800;cursor:pointer;padding:0;}
+.btn-back:hover{color:#1C2129;}
+.result-eyebrow{font-size:11px;font-weight:800;letter-spacing:2.5px;color:#8C7038;}
+.verdict{background:linear-gradient(160deg,#1B2735,#10161F);border-radius:13px;padding:30px 26px;color:#fff;position:relative;overflow:hidden;box-shadow:0 28px 50px -26px rgba(8,14,22,.6);}
+.verdict-glow{position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,106,.22),transparent 68%);}
+.verdict-row{position:relative;display:flex;align-items:center;gap:15px;}
+.verdict-icon{flex:none;width:54px;height:54px;border-radius:50%;background:#2F7A52;color:#fff;font-size:25px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 22px -10px rgba(47,122,82,.7);}
+.verdict-tag{font-size:11px;font-weight:800;letter-spacing:2px;color:#C9A86A;}
+.verdict-title{font-size:20px;font-weight:800;margin-top:4px;letter-spacing:-.3px;}
+.verdict-desc{position:relative;font-size:13px;color:rgba(231,225,212,.66);line-height:1.6;margin:16px 0 0;}
+.result-card{background:#fff;border-radius:13px;margin-top:16px;overflow:hidden;box-shadow:0 20px 44px -28px rgba(20,26,34,.4);position:relative;}
+.result-card-h{padding:20px 24px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #EFEADE;}
+.result-card-h span:first-child{font-size:14.5px;font-weight:800;color:#1C2129;letter-spacing:-.3px;}
+.result-card-h .seoul{font-size:10.5px;font-weight:800;letter-spacing:1.5px;color:#C9A86A;}
+.result-table{padding:4px 24px 18px;}
+.result-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid rgba(0,0,0,.07);}
+.result-row:last-child{border-bottom:none;}
+.result-row span{font-size:12.5px;color:#6B7079;}
+.result-row b{font-size:12.5px;font-weight:800;text-align:right;}
+.seal{position:absolute;bottom:18px;right:22px;width:52px;height:52px;border-radius:50%;border:1.5px solid #DCC58A;color:#C9A86A;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;text-align:center;line-height:1.15;transform:rotate(-13deg);opacity:.9;}
+.result-valid{font-size:11px;color:#8E8C84;line-height:1.7;margin-top:16px;padding-left:2px;}
+.result-valid b{color:#6B7079;}
+.btn-gold-lg{position:relative;width:100%;margin-top:22px;border:none;border-radius:9px;padding:20px;background:linear-gradient(180deg,#E6CE82,#C9A86A);color:#12171F;font-weight:800;font-size:16px;cursor:pointer;overflow:hidden;box-shadow:0 18px 34px -16px rgba(201,168,106,.8);transition:transform .18s;}
+.btn-gold-lg:hover{transform:translateY(-2px);}
+.btn-gold-lg:active{transform:scale(.985);}
+.btn-gold-lg::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(120deg,transparent 35%,rgba(255,255,255,.5) 50%,transparent 65%);transform:translateX(-130%);animation:shimmer 4s ease-in-out infinite;pointer-events:none;}
+.result-download{text-align:center;margin-top:14px;font-size:13px;font-weight:800;color:#8C7038;text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
+/* ───────── CONTACT ───────── */
+.contact.active{display:flex;flex-direction:column;min-height:100vh;background:#ECE7DC;animation:coverIn .55s cubic-bezier(.16,1,.3,1);}
+.contact-wrap{max-width:560px;margin:0 auto;flex:1;width:100%;}
+.contact-hero{background:linear-gradient(160deg,#1B2735,#10161F);padding:clamp(26px,5vw,40px) clamp(24px,5vw,40px) 34px;color:#fff;position:relative;overflow:hidden;}
+.contact-hero-glow{position:absolute;top:-60px;right:-40px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,106,.2),transparent 68%);}
+.contact-hero .btn-back{position:relative;color:rgba(231,225,212,.7);}
+.contact-hero .btn-back:hover{color:#fff;}
+.contact-eyebrow{position:relative;font-size:11px;font-weight:800;letter-spacing:2.5px;color:#C9A86A;margin-top:20px;}
+.contact-title{position:relative;font-size:clamp(22px,5.5vw,26px);font-weight:800;margin-top:10px;letter-spacing:-.4px;}
+.contact-sub{position:relative;font-size:13px;color:rgba(231,225,212,.66);line-height:1.65;margin-top:11px;}
+.contact-form{padding:clamp(26px,5vw,40px);}
+.flabel{font-size:12px;font-weight:800;color:#6B7079;margin-bottom:9px;display:block;letter-spacing:.3px;}
+.flabel.mt{margin:18px 0 9px;}
+.finput{width:100%;border:1.5px solid #DAD3C4;border-radius:8px;padding:17px;font-size:14.5px;color:#1C2129;background:#FBFAF6;outline:none;transition:all .2s;}
+.finput:focus{border-color:#C9A86A;box-shadow:0 0 0 3px rgba(201,168,106,.15);background:#fff;}
+.privacy{margin-top:20px;background:#fff;border:1px solid #E4DECF;border-radius:9px;padding:18px;}
+.privacy-h{font-size:12.5px;font-weight:800;color:#1C2129;}
+.privacy-d{font-size:11px;color:#8E8C84;line-height:1.7;margin-top:8px;}
+.privacy-check{display:flex;align-items:center;gap:11px;margin-top:15px;cursor:pointer;}
+.privacy-check input{display:none;}
+.checkbox{flex:none;width:23px;height:23px;border-radius:6px;border:1.5px solid #CFC6B4;background:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:transparent;transition:all .2s;}
+.privacy-check input:checked + .checkbox{background:#C9A86A;border-color:#C9A86A;color:#12171F;}
+.privacy-check span:last-child{font-size:12.5px;font-weight:800;color:#1C2129;}
+.btn-submit{width:100%;margin-top:22px;border:none;border-radius:9px;padding:20px;font-weight:800;font-size:16px;transition:all .3s;background:#DED7C8;color:#A39C8C;cursor:not-allowed;box-shadow:none;}
+.btn-submit.ready{background:linear-gradient(180deg,#E6CE82,#C9A86A);color:#12171F;cursor:pointer;box-shadow:0 16px 28px -14px rgba(201,168,106,.78);}
+.btn-submit.done{background:#21603F;color:#fff;cursor:default;box-shadow:0 16px 28px -14px rgba(33,96,63,.6);}
+/* ───────── animations ───────── */
+@keyframes coverIn{from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:translateY(0);}}
+@keyframes qIn{from{opacity:0;transform:translateY(16px) scale(.99);}to{opacity:1;transform:translateY(0) scale(1);}}
+@keyframes ledgerIn{from{opacity:0;transform:translateX(-12px);}to{opacity:1;transform:translateX(0);}}
+@keyframes rowIn{from{opacity:0;transform:translateX(14px);}to{opacity:1;transform:translateX(0);}}
+@keyframes shimmer{0%{transform:translateX(-130%);}55%,100%{transform:translateX(130%);}}
+@keyframes glowFloat{0%,100%{transform:translate(0,0);opacity:.8;}50%{transform:translate(-16px,18px);opacity:1;}}
+@keyframes sealIn{from{opacity:0;transform:rotate(-13deg) scale(.6);}to{opacity:.92;transform:rotate(-13deg) scale(1);}}
+/* ───────── responsive (mobile < 700px) ───────── */
+@media (max-width:699px){
+  .ws-shell{flex-direction:column;}
+  .rail{position:sticky;top:0;z-index:30;width:auto;height:auto;align-self:auto;background:linear-gradient(135deg,#141A22,#0B0F15);padding:16px 22px 18px;overflow:visible;}
+  .rail-full{display:none;}
+  .rail-mini{display:block;margin-top:14px;}
+  .rail-mini-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
+  .rail-mini-top .s{font-size:11px;font-weight:800;letter-spacing:1.5px;color:#C9A86A;}
+  .rail-mini-top .n{font-size:11px;font-weight:700;color:rgba(231,225,212,.5);}
+  .minibar{height:5px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden;}
+  .minibar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#C9A86A,#E6CE82);transition:width .6s cubic-bezier(.16,1,.3,1);width:0%;}
+  .ws-main{padding:30px 22px 0;align-items:stretch;}
+  .nav-wrap{padding-top:30px;padding-bottom:18px;}
+  .ws-footer{display:block;padding:34px 22px 28px;}
+}
+
+</style>
+</head>
+<body>
+
+    <section class="screen cover active" id="scr-intro">
+      <div class="cover-ring1"></div><div class="cover-glow"></div>
+      <div class="cover-vtext">ELIGIBILITY ASSESSMENT</div>
+      <div class="cover-inner">
+        <div class="cover-top">
+          <div class="cover-brand"><span class="cover-logo">T</span><span class="cover-bname">개인택시 양수도센터</span></div>
+          <span class="cover-tel">1566-7114</span>
+        </div>
+        <div class="cover-mid">
+          <div class="cover-eyebrow">SELF ASSESSMENT</div>
+          <div class="cover-head"><span class="cover-rule"></span><div>
+            <h1>개인택시 양수<br>자격 온라인 진단</h1>
+            <div class="cover-lead">나의 준비상태를 확인하세요 <span>(개인별 맞춤 진단표 제공)</span></div>
+            <p class="cover-desc">단계별 자격사항에 응답해주시면 양수가능여부와 필요한 준비사항을 알려드립니다.</p>
+          </div></div>
+          <div class="cover-stats">
+            <div class="cover-stat"><b>3</b><span>분 소요</span></div>
+            <div class="cover-stat"><b>8</b><span>단계 진단</span></div>
+            <div class="cover-stat"><b>100%</b><span>무료</span></div>
+          </div>
+        </div>
+        <button type="button" class="cover-cta" data-start="1">진단 시작하기 &nbsp;→</button>
+        <div class="cover-foot">www.tlxc.co.kr</div>
+      </div>
+    </section>
+
+    <section class="screen ws" id="scr-q1" data-step="0" data-chip="서울시 거주 이력" data-stepname="STEP 01">
+      <div class="ws-shell">
+        <!-- RAIL -->
+        <aside class="rail">
+          <div class="rail-brand"><span class="rail-logo">T</span><span class="rail-name">개인택시 양수 자격 진단</span></div>
+          <!-- full rail (desktop) -->
+          <div class="rail-full">
+            <div class="ringwrap">
+              <div class="ring">
+                <svg width="118" height="118" viewBox="0 0 118 118"><circle cx="59" cy="59" r="52" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="6"></circle><circle class="ring-arc" cx="59" cy="59" r="52" fill="none" stroke="#C9A86A" stroke-width="6" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7" transform="rotate(-90 59 59)"></circle></svg>
+                <div class="ringnum"><b class="ring-num">1</b><span>/ 3 단계</span></div>
+              </div>
+              <div class="rail-step">STEP 01</div>
+            </div>
+            <div class="ledger-title">수집된 정보</div>
+            <div class="ledger"></div>
+            <div class="rail-foot">
+              <div class="rail-foot-name">개인택시 양수도센터</div>
+              <p class="rail-foot-desc"><strong>개인택시 양수도센터</strong>는 모빌리티 전문 기업 <strong>한국모빌리티연구소</strong>가 운영하는 면허 중개 센터입니다. 1:1 양수 컨설팅 및 양수에 대한 궁금한 모든 것들을 아래로 문의해 주세요.</p>
+              <div class="rail-links"><a href="tel:15667114"><i>T</i>상담전화 1566-7114</a><a href="http://pf.kakao.com/_faxiRn/" target="_blank"><i>K</i>카카오톡 상담</a><a href="http://www.tlxc.co.kr" target="_blank"><i>W</i>공식 홈페이지</a></div>
+              <div class="rail-copy">Copyright 2026. KOMOLAB Inc.<br>All rights reserved.</div>
+            </div>
+          </div>
+          <!-- mini rail (mobile) -->
+          <div class="rail-mini">
+            <div class="rail-mini-top"><span class="s">STEP 01</span><span class="n"><span class="ring-num">1</span> / 3</span></div>
+            <div class="minibar"><div class="minibar-fill"></div></div>
+          </div>
+        </aside>
+
+        <!-- MAIN -->
+        <div class="ws-main">
+          <div class="ws-container">
+            <div class="chip-wrap"><span class="chip">서울시 거주 이력</span></div>
+            <h2 class="q-title">서울시 거주 이력은<br>어느 정도이신가요?</h2>
+            <p class="q-sub">서류 접수일 기준 태어난 이후로 도합 12개월 이상의 서울시 거주 이력이 필요합니다.(주민등록초본 기준)</p>
+            <button type="button" class="sample-btn">주민등록초본 샘플 이미지 보기</button>
+            <div class="opt-grid">
+        <button type="button" class="opt" data-q="q1" data-i="0">
+          <div class="opt-head"><span class="opt-badge">01</span><span class="opt-check">✓</span></div>
+          <span class="opt-label">6개월 미만</span>
+        </button>
+        <button type="button" class="opt" data-q="q1" data-i="1">
+          <div class="opt-head"><span class="opt-badge">02</span><span class="opt-check">✓</span></div>
+          <span class="opt-label">6개월 이상 12개월 미만</span>
+        </button>
+        <button type="button" class="opt" data-q="q1" data-i="2">
+          <div class="opt-head"><span class="opt-badge">03</span><span class="opt-check">✓</span></div>
+          <span class="opt-label">12개월 이상</span>
+        </button>
+        <button type="button" class="opt" data-q="q1" data-i="3">
+          <div class="opt-head"><span class="opt-badge">04</span><span class="opt-check">✓</span></div>
+          <span class="opt-label">잘 모르겠음</span>
+        </button>
+            </div>
+            <div class="nav-wrap">
+              <button type="button" class="btn-prev" data-back="intro">이전</button>
+              <button type="button" class="btn-next" data-next="q2" disabled>다음 단계로</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="ws-footer">
+        <div class="fb-inner">
+          <div class="fb-name">개인택시 양수도센터</div>
+          <p class="fb-desc"><strong>개인택시 양수도센터</strong>는 모빌리티 전문 기업 <strong>한국모빌리티연구소</strong>가 운영하는 면허 중개 센터입니다. 1:1 양수 컨설팅 및 양수에 대한 궁금한 모든 것들을 아래로 문의해 주세요.</p>
+          <div class="fb-links"><a href="tel:15667114"><i>T</i>상담전화 1566-7114</a><a href="http://pf.kakao.com/_faxiRn/" target="_blank"><i>K</i>카카오톡 상담</a><a href="http://www.tlxc.co.kr" target="_blank"><i>W</i>공식 홈페이지</a></div>
+          <div class="fb-divider"></div>
+          <div class="fb-copy"><span class="fb-c1">개인택시 양수도센터 1566-7114</span><span class="fb-c2">www.tlxc.co.kr</span><span class="fb-c3">Copyright 2026. KOMOLAB Inc. All rights reserved.</span></div>
+        </div></footer>
+    </section>
+
+    <section class="screen ws" id="scr-q2" data-step="1" data-chip="현재 거주 여부" data-stepname="STEP 02">
+      <div class="ws-shell">
+        <!-- RAIL -->
+        <aside class="rail">
+          <div class="rail-brand"><span class="rail-logo">T</span><span class="rail-name">개인택시 양수 자격 진단</span></div>
+          <!-- full rail (desktop) -->
+          <div class="rail-full">
+            <div class="ringwrap">
+              <div class="ring">
+                <svg width="118" height="118" viewBox="0 0 118 118"><circle cx="59" cy="59" r="52" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="6"></circle><circle class="ring-arc" cx="59" cy="59" r="52" fill="none" stroke="#C9A86A" stroke-width="6" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7" transform="rotate(-90 59 59)"></circle></svg>
+                <div class="ringnum"><b class="ring-num">2</b><span>/ 3 단계</span></div>
+              </div>
+              <div class="rail-step">STEP 02</div>
+            </div>
+            <div class="ledger-title">수집된 정보</div>
+            <div class="ledger"></div>
+            <div class="rail-foot">
+              <div class="rail-foot-name">개인택시 양수도센터</div>
+              <p class="rail-foot-desc"><strong>개인택시 양수도센터</strong>는 모빌리티 전문 기업 <strong>한국모빌리티연구소</strong>가 운영하는 면허 중개 센터입니다. 1:1 양수 컨설팅 및 양수에 대한 궁금한 모든 것들을 아래로 문의해 주세요.</p>
+              <div class="rail-links"><a href="tel:15667114"><i>T</i>상담전화 1566-7114</a><a href="http://pf.kakao.com/_faxiRn/" target="_blank"><i>K</i>카카오톡 상담</a><a href="http://www.tlxc.co.kr" target="_blank"><i>W</i>공식 홈페이지</a></div>
+              <div class="rail-copy">Copyright 2026. KOMOLAB Inc.<br>All rights reserved.</div>
+            </div>
+          </div>
+          <!-- mini rail (mobile) -->
+          <div class="rail-mini">
+            <div class="rail-mini-top"><span class="s">STEP 02</span><span class="n"><span class="ring-num">2</span> / 3</span></div>
+            <div class="minibar"><div class="minibar-fill"></div></div>
+          </div>
+        </aside>
+
+        <!-- MAIN -->
+        <div class="ws-main">
+          <div class="ws-container">
+            <div class="chip-wrap"><span class="chip">현재 거주 여부</span></div>
+            <h2 class="q-title">현재 서울특별시에<br>거주하고 계신가요?</h2>
+            <p class="q-sub">서류 접수일 기준 현재 주민등록상 주소지가 서울특별시여야 합니다.</p>
+            
+            <div class="opt-grid">
+        <button type="button" class="opt" data-q="q2" data-i="0">
+          <div class="opt-head"><span class="opt-badge">✓</span><span class="opt-check">✓</span></div>
+          <span class="opt-label">예</span>
+        </button>
+        <button type="button" class="opt" data-q="q2" data-i="1">
+          <div class="opt-head"><span class="opt-badge">✕</span><span class="opt-check">✓</span></div>
+          <span class="opt-label">아니오</span>
+        </button>
+            </div>
+            <div class="nav-wrap">
+              <button type="button" class="btn-prev" data-back="q1">이전</button>
+              <button type="button" class="btn-next" data-next="q3" disabled>다음 단계로</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="ws-footer">
+        <div class="fb-inner">
+          <div class="fb-name">개인택시 양수도센터</div>
+          <p class="fb-desc"><strong>개인택시 양수도센터</strong>는 모빌리티 전문 기업 <strong>한국모빌리티연구소</strong>가 운영하는 면허 중개 센터입니다. 1:1 양수 컨설팅 및 양수에 대한 궁금한 모든 것들을 아래로 문의해 주세요.</p>
+          <div class="fb-links"><a href="tel:15667114"><i>T</i>상담전화 1566-7114</a><a href="http://pf.kakao.com/_faxiRn/" target="_blank"><i>K</i>카카오톡 상담</a><a href="http://www.tlxc.co.kr" target="_blank"><i>W</i>공식 홈페이지</a></div>
+          <div class="fb-divider"></div>
+          <div class="fb-copy"><span class="fb-c1">개인택시 양수도센터 1566-7114</span><span class="fb-c2">www.tlxc.co.kr</span><span class="fb-c3">Copyright 2026. KOMOLAB Inc. All rights reserved.</span></div>
+        </div></footer>
+    </section>
+
+    <section class="screen ws" id="scr-q3" data-step="2" data-chip="택시운전자격증" data-stepname="STEP 03">
+      <div class="ws-shell">
+        <!-- RAIL -->
+        <aside class="rail">
+          <div class="rail-brand"><span class="rail-logo">T</span><span class="rail-name">개인택시 양수 자격 진단</span></div>
+          <!-- full rail (desktop) -->
+          <div class="rail-full">
+            <div class="ringwrap">
+              <div class="ring">
+                <svg width="118" height="118" viewBox="0 0 118 118"><circle cx="59" cy="59" r="52" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="6"></circle><circle class="ring-arc" cx="59" cy="59" r="52" fill="none" stroke="#C9A86A" stroke-width="6" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7" transform="rotate(-90 59 59)"></circle></svg>
+                <div class="ringnum"><b class="ring-num">3</b><span>/ 3 단계</span></div>
+              </div>
+              <div class="rail-step">STEP 03</div>
+            </div>
+            <div class="ledger-title">수집된 정보</div>
+            <div class="ledger"></div>
+            <div class="rail-foot">
+              <div class="rail-foot-name">개인택시 양수도센터</div>
+              <p class="rail-foot-desc"><strong>개인택시 양수도센터</strong>는 모빌리티 전문 기업 <strong>한국모빌리티연구소</strong>가 운영하는 면허 중개 센터입니다. 1:1 양수 컨설팅 및 양수에 대한 궁금한 모든 것들을 아래로 문의해 주세요.</p>
+              <div class="rail-links"><a href="tel:15667114"><i>T</i>상담전화 1566-7114</a><a href="http://pf.kakao.com/_faxiRn/" target="_blank"><i>K</i>카카오톡 상담</a><a href="http://www.tlxc.co.kr" target="_blank"><i>W</i>공식 홈페이지</a></div>
+              <div class="rail-copy">Copyright 2026. KOMOLAB Inc.<br>All rights reserved.</div>
+            </div>
+          </div>
+          <!-- mini rail (mobile) -->
+          <div class="rail-mini">
+            <div class="rail-mini-top"><span class="s">STEP 03</span><span class="n"><span class="ring-num">3</span> / 3</span></div>
+            <div class="minibar"><div class="minibar-fill"></div></div>
+          </div>
+        </aside>
+
+        <!-- MAIN -->
+        <div class="ws-main">
+          <div class="ws-container">
+            <div class="chip-wrap"><span class="chip">택시운전자격증</span></div>
+            <h2 class="q-title">서울시 택시운전자격증을<br>취득하셨나요?</h2>
+            <p class="q-sub">서울특별시에서 발급한 택시운전자격증 보유 여부를 선택해주세요.</p>
+            
+            <div class="opt-grid">
+        <button type="button" class="opt" data-q="q3" data-i="0">
+          <div class="opt-head"><span class="opt-badge">✓</span><span class="opt-check">✓</span></div>
+          <span class="opt-label">예</span>
+        </button>
+        <button type="button" class="opt" data-q="q3" data-i="1">
+          <div class="opt-head"><span class="opt-badge">✕</span><span class="opt-check">✓</span></div>
+          <span class="opt-label">아니오</span>
+        </button>
+            </div>
+            <div class="nav-wrap">
+              <button type="button" class="btn-prev" data-back="q2">이전</button>
+              <button type="button" class="btn-next" data-next="result" disabled>진단 결과 확인하기</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="ws-footer">
+        <div class="fb-inner">
+          <div class="fb-name">개인택시 양수도센터</div>
+          <p class="fb-desc"><strong>개인택시 양수도센터</strong>는 모빌리티 전문 기업 <strong>한국모빌리티연구소</strong>가 운영하는 면허 중개 센터입니다. 1:1 양수 컨설팅 및 양수에 대한 궁금한 모든 것들을 아래로 문의해 주세요.</p>
+          <div class="fb-links"><a href="tel:15667114"><i>T</i>상담전화 1566-7114</a><a href="http://pf.kakao.com/_faxiRn/" target="_blank"><i>K</i>카카오톡 상담</a><a href="http://www.tlxc.co.kr" target="_blank"><i>W</i>공식 홈페이지</a></div>
+          <div class="fb-divider"></div>
+          <div class="fb-copy"><span class="fb-c1">개인택시 양수도센터 1566-7114</span><span class="fb-c2">www.tlxc.co.kr</span><span class="fb-c3">Copyright 2026. KOMOLAB Inc. All rights reserved.</span></div>
+        </div></footer>
+    </section>
+
+    <section class="screen result" id="scr-result">
+      <div class="result-body"><div class="result-wrap">
+        <div class="result-top">
+          <button type="button" class="btn-back" data-back="q3">← 이전</button>
+          <span class="result-eyebrow">DIAGNOSIS REPORT</span>
+        </div>
+        <div class="verdict">
+          <div class="verdict-glow"></div>
+          <div class="verdict-row">
+            <div class="verdict-icon">✓</div>
+            <div><div class="verdict-tag">RESULT · 8 / 8 충족</div><div class="verdict-title">현재 양수 가능합니다</div></div>
+          </div>
+          <p class="verdict-desc">모든 조건을 충족하여 현재 양수 가능합니다.</p>
+        </div>
+        <div class="result-card">
+          <div class="result-card-h"><span>양수 자격 및 요건 현황</span><span class="seoul">SEOUL</span></div>
+          <div class="result-table" id="resultTable"></div>
+          <div class="seal">TLXC<br>SEAL</div>
+        </div>
+        <div class="result-valid"><b>유효기한</b> · 모든 제출 서류 발급일 기준 1개월 이내 (단, 양수교육 및 신규교육 수료증: 수료일 기준 1년 이내)</div>
+        <button type="button" class="btn-gold-lg" data-goto="contact">전문 상담 신청하기 &nbsp;→</button>
+        <div class="result-download">맞춤 진단표 + 필요 서류 다운로드</div>
+      </div></div>
+      <footer class="result-footer">
+        <div class="fb-inner">
+          <div class="fb-name">개인택시 양수도센터</div>
+          <p class="fb-desc"><strong>개인택시 양수도센터</strong>는 모빌리티 전문 기업 <strong>한국모빌리티연구소</strong>가 운영하는 면허 중개 센터입니다. 1:1 양수 컨설팅 및 양수에 대한 궁금한 모든 것들을 아래로 문의해 주세요.</p>
+          <div class="fb-links"><a href="tel:15667114"><i>T</i>상담전화 1566-7114</a><a href="http://pf.kakao.com/_faxiRn/" target="_blank"><i>K</i>카카오톡 상담</a><a href="http://www.tlxc.co.kr" target="_blank"><i>W</i>공식 홈페이지</a></div>
+          <div class="fb-divider"></div>
+          <div class="fb-copy"><span class="fb-c1">개인택시 양수도센터 1566-7114</span><span class="fb-c2">www.tlxc.co.kr</span><span class="fb-c3">Copyright 2026. KOMOLAB Inc. All rights reserved.</span></div>
+        </div></footer>
+    </section>
+
+    <section class="screen contact" id="scr-contact">
+      <div class="contact-wrap">
+        <div class="contact-hero">
+          <div class="contact-hero-glow"></div>
+          <button type="button" class="btn-back" data-back="result">← 이전</button>
+          <div class="contact-eyebrow">CONSULTING REQUEST</div>
+          <div class="contact-title">전문 상담을 신청해 주세요</div>
+          <div class="contact-sub">입력하신 연락처로 현재 진단 결과를 바탕으로 맞춤 상담을 도와드립니다.</div>
+        </div>
+        <div class="contact-form">
+          <label class="flabel">이름</label>
+          <input type="text" class="finput" placeholder="이름을 입력해주세요">
+          <label class="flabel mt">연락처</label>
+          <input type="tel" class="finput" placeholder="010-0000-0000">
+          <div class="privacy">
+            <div class="privacy-h">개인정보 수집·이용 동의</div>
+            <div class="privacy-d">수집항목: 이름, 연락처 / 수집목적: 개인택시 양수 상담 안내 / 보유기간: 상담 완료 후 1년</div>
+            <label class="privacy-check"><input type="checkbox" id="agree"><span class="checkbox">✓</span><span>개인정보 수집·이용에 동의합니다 (필수)</span></label>
+          </div>
+          <button type="button" class="btn-submit" id="submitBtn">상담 신청 완료하기</button>
+        </div>
+      </div>
+      <footer class="result-footer">
+        <div class="fb-inner">
+          <div class="fb-name">개인택시 양수도센터</div>
+          <p class="fb-desc"><strong>개인택시 양수도센터</strong>는 모빌리티 전문 기업 <strong>한국모빌리티연구소</strong>가 운영하는 면허 중개 센터입니다. 1:1 양수 컨설팅 및 양수에 대한 궁금한 모든 것들을 아래로 문의해 주세요.</p>
+          <div class="fb-links"><a href="tel:15667114"><i>T</i>상담전화 1566-7114</a><a href="http://pf.kakao.com/_faxiRn/" target="_blank"><i>K</i>카카오톡 상담</a><a href="http://www.tlxc.co.kr" target="_blank"><i>W</i>공식 홈페이지</a></div>
+          <div class="fb-divider"></div>
+          <div class="fb-copy"><span class="fb-c1">개인택시 양수도센터 1566-7114</span><span class="fb-c2">www.tlxc.co.kr</span><span class="fb-c3">Copyright 2026. KOMOLAB Inc. All rights reserved.</span></div>
+        </div></footer>
+    </section>
+<script>
+
+// ── 자격진단 도시에 — 표준 HTML 데모 흐름 (Claude Code에서 실제 분기/DB로 확장하세요) ──
+var order=['q1','q2','q3'];
+var QLABEL={q1:'서울시 거주 이력',q2:'현재 서울시 거주 여부',q3:'서울시 택시운전자격증 취득 여부'};
+var QOPTS={q1:['6개월 미만','6개월 이상 12개월 미만','12개월 이상','잘 모르겠음'],q2:['예','아니오'],q3:['예','아니오']};
+var RING=326.7, answers={}, agreed=false, submitted=false;
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  var el=document.getElementById('scr-'+id); if(el) el.classList.add('active');
+  if(order.indexOf(id)!==-1) refreshWs(id);
+  window.scrollTo(0,0);
+}
+function ledgerHtml(){
+  var rows=[{l:'운행 희망 지역',v:'서울특별시',seed:true}];
+  order.forEach(function(k){ if(answers[k]!=null) rows.push({l:QLABEL[k],v:QOPTS[k][answers[k]]}); });
+  return rows.map(function(r){
+    return '<div class="ledger-row"><span>'+r.l+'</span><b style="color:'+(r.seed?'rgba(231,225,212,.78)':'#C9A86A')+'">'+r.v+'</b></div>';
+  }).join('');
+}
+function refreshWs(id){
+  var el=document.getElementById('scr-'+id);
+  var idx=order.indexOf(id);
+  var pct=idx/order.length;                 // 진행도: 완료한 단계 수 기준
+  // ring (desktop)
+  var arc=el.querySelector('.ring-arc'); if(arc) arc.style.strokeDashoffset=String(RING*(1-pct));
+  el.querySelectorAll('.ring-num').forEach(function(n){n.textContent=idx+1;});
+  // minibar (mobile)
+  var mb=el.querySelector('.minibar-fill'); if(mb) mb.style.width=Math.round(pct*100)+'%';
+  // ledger
+  var lg=el.querySelector('.ledger'); if(lg) lg.innerHTML=ledgerHtml();
+  // restore selection + next enabled
+  var sel=answers[id];
+  el.querySelectorAll('.opt').forEach(function(b){ b.classList.toggle('selected', parseInt(b.getAttribute('data-i'),10)===sel); });
+  var next=el.querySelector('.btn-next'); if(next) next.disabled=(sel==null);
+}
+function buildResultRows(){
+  var data=[["운행 희망 지역","서울특별시",false],["서울시 거주 이력","12개월 이상",true],["현재 서울시 거주 여부","예",true],["서울시 택시운전자격증 취득 여부","예",true],["운전적성정밀검사 수검 여부","예",true],["영업용 차량/운전직 경력 여부","미경력자",false],["양수교육 수료 여부","수료",true],["인사 사고 이력","아니오",false]];
+  var box=document.getElementById('resultTable'); if(!box) return;
+  box.innerHTML=data.map(function(r,i){
+    return '<div class="result-row" style="opacity:0;animation:rowIn .5s cubic-bezier(.16,1,.3,1) forwards;animation-delay:'+(i*65+140)+'ms;"><span>'+r[0]+'</span><b style="color:'+(r[2]?'#21603F':'#1C2129')+'">'+r[1]+'</b></div>';
+  }).join('');
+}
+
+document.addEventListener('click',function(e){
+  var t=e.target;
+  var opt=t.closest('.opt');
+  if(opt){ var q=opt.getAttribute('data-q'); answers[q]=parseInt(opt.getAttribute('data-i'),10); refreshWs(q); return; }
+  var start=t.closest('[data-start]'); if(start){ show('q1'); return; }
+  var next=t.closest('[data-next]'); if(next && !next.disabled){ var to=next.getAttribute('data-next'); if(to==='result') buildResultRows(); show(to); return; }
+  var back=t.closest('[data-back]'); if(back){ show(back.getAttribute('data-back')); return; }
+  var goc=t.closest('[data-goto]'); if(goc){ show(goc.getAttribute('data-goto')); return; }
+});
+
+// contact: 동의 → 제출 활성, 제출 → 완료
+document.addEventListener('change',function(e){
+  if(e.target.id==='agree'){ agreed=e.target.checked; var b=document.getElementById('submitBtn'); if(b&&!submitted) b.classList.toggle('ready',agreed); }
+});
+document.addEventListener('click',function(e){
+  var sb=e.target.closest('#submitBtn');
+  if(sb && agreed && !submitted){ submitted=true; sb.classList.remove('ready'); sb.classList.add('done'); sb.textContent='신청이 완료되었습니다 ✓'; }
+});
+
+show('intro');
+
+</script>
+</body>
+</html>
