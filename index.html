@@ -10,7 +10,8 @@
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 
-  gtag('config', 'G-ZJKSED9N6W');
+  /* SPA 화면 추적: 기본 page_view 대신 화면 전환마다 가상 page_view를 보냄(중복 집계 방지) */
+  gtag('config', 'G-ZJKSED9N6W', { send_page_view: false });
 </script>
 <title>개인택시 양수 자격 진단</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -738,6 +739,22 @@ function fitActiveTitle(){
   }
   el.style.fontSize = ''; // 축소로도 못 맞추면(진짜 긴 제목) 원복해 과도 축소 방지
 }
+/* ── GA4 화면 추적: 화면 전환마다 가상 page_view 전송(이탈 위치 퍼널 분석용) ── */
+const _GA_SCREEN_NAMES = {
+  s0:'01_시작', s0b:'02_안내사항', sRegion:'03_지역선택', s1:'04_거주이력',
+  s2:'05_현재거주', s3:'06_자격증', s3pt:'07_적성검사', s4:'08_경력여부',
+  s5ACalc:'09_경력계산기', s5B:'10_사고이력', s6B1:'11_양수교육', s7B1:'12_신규교육',
+  s8B1:'13_진단결과', s9B:'14_문자신청', sEnd:'15_발송완료'
+};
+function _gaTrackScreen(id){
+  try {
+    if (typeof gtag !== 'function') return;
+    gtag('event', 'page_view', {
+      page_title: _GA_SCREEN_NAMES[id] || id,
+      page_location: location.origin + location.pathname + '#' + id
+    });
+  } catch(e){}
+}
 function go(id, pushStack){
   if (pushStack === undefined) pushStack = true;
   let cur = document.querySelector('.screen.active');
@@ -754,6 +771,7 @@ function go(id, pushStack){
   let next = document.getElementById('scr-'+id);
   if (!next) return;
   next.classList.add('active');
+  _gaTrackScreen(id);
   if (pushStack && curId && curId !== id) navStack.push(curId);
 
   document.body.classList.toggle('on-cover', id === 's0');

@@ -124,6 +124,10 @@
 - **GA4 도입(2026-07-14)**: `<head>`에 Google Analytics 4 태그(gtag.js) 삽입, 측정 ID `G-ZJKSED9N6W`.
   PV/UV·유입경로는 GA4에서 확인. URL 배포 시 채널별 UTM 파라미터(`?utm_source=...&utm_medium=...`)를
   붙이면 GA4와 기존 `getTrafficSource()`(시트 source 열) 양쪽에 채널이 기록됨.
+- **GA4 화면별 이탈 추적(2026-07-14)**: SPA라 기본 page_view 1회만 잡히는 문제를 해결하기 위해
+  `go()`에 `_gaTrackScreen(id)` 후킹 — 화면 전환마다 가상 page_view 전송(`_GA_SCREEN_NAMES` 매핑,
+  "01_시작"~"15_발송완료"). config는 `send_page_view:false`로 중복 집계 방지(첫 화면도 `go('s0')`로
+  잡힘). GA4 확인: 보고서>참여도>페이지 및 화면(page_title 기준), 탐색>유입경로 탐색분석(퍼널).
 - **진단표 용어 통일(2026-07-14)**: 진단표·판정 배너의 "미충족"을 "부적합"으로 통일
   (거주 요건 "부적합 (6개월 미만)", 배너 "현재 양수 자격 부적합"). 양수교육 대상 여부의
   "(경력 미충족)"은 경력 기간 행 표기와 맞춰 "(경력 부족)"으로 변경. `classifyDiagValue`의
