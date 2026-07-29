@@ -121,6 +121,9 @@
 - **통합신청 포털 페이지**(`통합포털/개인택시_양수준비_통합신청_포털.html`): 자격진단과 동일한
   디자인(오브시디언+골드+크림, Noto Sans KR)으로 재스타일링, 자격진단 푸터 밴드 원본 이식.
   실서비스 저장소는 별도(`nick-sbkim.github.io/eventportal`) — 사용자가 index.html에 수동 반영.
+- **배포용 단축 링크(2026-07-14)**: 루트에 `kakao_open_1/index.html` — OG 태그(썸네일 포함) +
+  `/?utm_source=kakao_open_1`로 즉시 리다이렉트. 새 채널용 단축 링크가 필요하면 이 폴더를 복사해
+  폴더명·utm_source만 바꾸면 됨. 유입은 GA4 세션 소스와 시트 D열(유입경로)에 kakao_open_1로 기록.
 - **카카오톡 공유 썸네일(2026-07-14)**: 루트에 `og_thumbnail.png`(800×418, 오브시디언+골드 디자인,
   LICENSE 로고) 추가, `<head>`에 Open Graph 메타태그(og:title/description/url/image) 삽입.
   이미지 재생성 시 스크래치패드의 `thumb.html`+Playwright 스크린샷 방식 사용(Noto Sans KR ttf를
