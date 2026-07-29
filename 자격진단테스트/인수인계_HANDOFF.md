@@ -121,6 +121,11 @@
 - **통합신청 포털 페이지**(`통합포털/개인택시_양수준비_통합신청_포털.html`): 자격진단과 동일한
   디자인(오브시디언+골드+크림, Noto Sans KR)으로 재스타일링, 자격진단 푸터 밴드 원본 이식.
   실서비스 저장소는 별도(`nick-sbkim.github.io/eventportal`) — 사용자가 index.html에 수동 반영.
+- **카카오톡 공유 썸네일(2026-07-14)**: 루트에 `og_thumbnail.png`(800×418, 오브시디언+골드 디자인,
+  LICENSE 로고) 추가, `<head>`에 Open Graph 메타태그(og:title/description/url/image) 삽입.
+  이미지 재생성 시 스크래치패드의 `thumb.html`+Playwright 스크린샷 방식 사용(Noto Sans KR ttf를
+  fonts.gstatic.com에서 받아 @font-face로 로드). 공유 미리보기 갱신은 카카오 디버거
+  (developers.kakao.com/tool/debugger/sharing)에서 캐시 초기화.
 - **GA4 도입(2026-07-14)**: `<head>`에 Google Analytics 4 태그(gtag.js) 삽입, 측정 ID `G-ZJKSED9N6W`.
   PV/UV·유입경로는 GA4에서 확인. URL 배포 시 채널별 UTM 파라미터(`?utm_source=...&utm_medium=...`)를
   붙이면 GA4와 기존 `getTrafficSource()`(시트 source 열) 양쪽에 채널이 기록됨.
