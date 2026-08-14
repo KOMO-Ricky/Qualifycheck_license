@@ -124,6 +124,8 @@
 - **KOLA 로고 교체(2026-08-14)**: KOMO 워드마크(logo_KOMO_horizon) 2곳(PC 레일 `.rail-logo-img`,
   커버 헤더 `.cover-logo-img`)을 KOLA 로고로 교체, alt="KOLA". 크기 +10%(레일 19.8px, 커버 26.4px),
   기존 top:2px 보정 제거하고 flex 중앙 정렬로 세로 정렬(로고·텍스트 중심 일치 확인).
+  커버 헤더는 이후 '한국모빌리티연구소 운영' 부제 제거로 한 줄("개인택시 양수도센터")이 되어
+  로고 21.2px(=1.41×15px)·구분선 22px로 축소, 픽셀 실측으로 세로 중앙 일치 확인.
   푸터의 흰 원형 배지(LICENSE)도 이후 KOLA로 교체 — 높이 1.41em(헤더 비율 1.76em에서 20% 축소, 폰트 비례 유지). PC 레일 푸터는 줄바꿈 방지 위해 폰트 14px→13px(로고는 em이라 자동 비례). 원본 `디자인/logo_KOLA.png`(남색 배경),
   배경 제거본 `디자인/logo_KOLA_transparent.png`(투명, 오렌지 #FF9800). 푸터의 흰 원형 배지는
   LICENSE 로고라 유지. "by KOMOLAB"·Copyright 등 텍스트는 미변경.
