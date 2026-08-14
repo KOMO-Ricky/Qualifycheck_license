@@ -122,7 +122,8 @@
   디자인(오브시디언+골드+크림, Noto Sans KR)으로 재스타일링, 자격진단 푸터 밴드 원본 이식.
   실서비스 저장소는 별도(`nick-sbkim.github.io/eventportal`) — 사용자가 index.html에 수동 반영.
 - **KOLA 로고 교체(2026-08-14)**: KOMO 워드마크(logo_KOMO_horizon) 2곳(PC 레일 `.rail-logo-img`,
-  커버 헤더 `.cover-logo-img`)을 KOLA 로고로 교체, alt="KOLA". 원본 `디자인/logo_KOLA.png`(남색 배경),
+  커버 헤더 `.cover-logo-img`)을 KOLA 로고로 교체, alt="KOLA". 크기 +10%(레일 19.8px, 커버 26.4px),
+  기존 top:2px 보정 제거하고 flex 중앙 정렬로 세로 정렬(로고·텍스트 중심 일치 확인). 원본 `디자인/logo_KOLA.png`(남색 배경),
   배경 제거본 `디자인/logo_KOLA_transparent.png`(투명, 오렌지 #FF9800). 푸터의 흰 원형 배지는
   LICENSE 로고라 유지. "by KOMOLAB"·Copyright 등 텍스트는 미변경.
 - **배포용 단축 링크(2026-07-14)**: 루트에 `kakao_open_1/index.html` — OG 태그(썸네일 포함) +
