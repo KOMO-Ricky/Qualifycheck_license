@@ -45,8 +45,9 @@
 - **저장소**: `komo-ricky/Qualifycheck_license` — 루트 `index.html`이 GitHub Pages 라이브 파일.
   커스텀 도메인 `qualifycheck.licen.co.kr`. 라이브 반영 시 최신 작업본 내용을 `index.html`에 복사.
 - (과거) 작업 저장소였던 `gh1005kr-create/qualifycheck_license`는 더 이상 사용하지 않음.
-- **통합포털(apply.licen.co.kr)의 실제 소스**: `KOMO-Ricky/KOMO_Taxi_total_apply` 저장소,
-  라이브 브랜치는 기본 브랜치 `claude/taxi-education-styling-d5yqtm` (main은 구버전, 미사용).
+- **통합포털(apply.licen.co.kr)의 실제 소스**: `KOMO-Ricky/KOMO_Taxi_total_apply` 저장소.
+  **GitHub Pages 배포 브랜치는 `main`** — 작업은 기본 브랜치 `claude/taxi-education-styling-d5yqtm`에서
+  하고, 라이브 반영 시 main의 index.html에 같은 내용을 반영해야 함(두 브랜치 모두 수정할 것).
   (nick-sbkim/eventportal은 과거 주소로, 더 이상 서비스하지 않음. 저장소 내
   `통합포털/개인택시_양수준비_통합신청_포털.html`은 초기 재디자인 사본 — 참고용.)
 - GitHub Pages는 `.nojekyll` 파일이 있어야 `_`로 시작하는 경로 등이 정상 서빙됨.
